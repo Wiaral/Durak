@@ -301,10 +301,16 @@
             <section id="screen-games" class="hidden flex-1 flex flex-col overflow-hidden p-3.5">
                 <div class="flex items-center justify-between gap-2 mb-2.5 shrink-0">
                     <div>
-                        <h2 class="text-sm font-black text-white">Открытые столы</h2>
+                        <h2 class="text-sm font-black text-white flex items-center gap-1.5">
+                            <span>Открытые столы</span>
+                            <span id="lobby-net-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Глобальный поиск столов активен"></span>
+                        </h2>
                         <p id="games-filter-summary" class="text-[11px] text-slate-400">Все ставки • 2–6 игр. • Любой режим</p>
                     </div>
                     <div class="flex items-center gap-1.5">
+                        <button onclick="requestLobbyRefresh()" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-black active:scale-95 transition" title="Обновить список">
+                            🔄
+                        </button>
                         <button onclick="openModal('join-code')" class="px-3 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-xs font-black active:scale-95 transition">
                             🔑 По коду
                         </button>
@@ -325,6 +331,9 @@
                         <p class="text-[11px] text-slate-400">Вход по коду комнаты или ссылке для друзей</p>
                     </div>
                     <div class="flex items-center gap-1.5">
+                        <button onclick="requestLobbyRefresh()" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-black active:scale-95 transition" title="Обновить список">
+                            🔄
+                        </button>
                         <button onclick="openModal('join-code')" class="px-3 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-xs font-extrabold active:scale-95 transition">
                             🔑 Ввести код
                         </button>
@@ -1047,34 +1056,212 @@
             if (screen === 'create') renderCreateScreenControls();
         }
 
-        // ТОЛЬКО ЖИВЫЕ ЛОББИ ИГРОКОВ (никаких ботовских комнат!)
-        let ALL_SESSIONS = loadLiveSessions();
+        // Очищаем старый локальный кэш зависших столов (#729, #948, Hiy и т.д.)
+        try {
+            localStorage.removeItem('durak_tma_live_rooms_v2');
+        } catch (e) {}
 
-        function loadLiveSessions() {
-            try {
-                const raw = localStorage.getItem('durak_tma_live_rooms_v2');
-                if (!raw) return [];
-                const parsed = JSON.parse(raw);
-                return Array.isArray(parsed) ? parsed : [];
-            } catch (e) {
-                return [];
-            }
-        }
+        // ТОЛЬКО ЖИВЫЕ ЛОББИ ИГРОКОВ В РЕАЛЬНОМ ВРЕМЕНИ МЕЖДУ АККАУНТАМИ И ТЕЛЕФОНАМИ
+        let ALL_SESSIONS = [];
+        const LOBBY_HUB_PEER_ID = 'durak_wiaral_global_lobby_hub_v3';
+        const ROOM_TTL_MS = 16000; // Стол живет только пока создатель держит окно ожидания открытым
 
-        function saveLiveSessions() {
-            try {
-                localStorage.setItem('durak_tma_live_rooms_v2', JSON.stringify(ALL_SESSIONS));
-            } catch (e) {}
-        }
+        let LOBBY_NET = {
+            isHubMaster: false,
+            hubPeer: null,
+            hubClients: new Map(), // peerId -> conn
+            clientPeer: null,
+            clientConn: null,
+            heartbeatTimer: null
+        };
 
-        // Синхронизация живых комнат между вкладками/окнами в реальном времени
-        window.addEventListener('storage', (evt) => {
-            if (evt.key === 'durak_tma_live_rooms_v2') {
-                ALL_SESSIONS = loadLiveSessions();
+        function pruneExpiredSessions() {
+            const now = Date.now();
+            const before = ALL_SESSIONS.length;
+            ALL_SESSIONS = ALL_SESSIONS.filter(r => r && r.updatedAt && (now - r.updatedAt) < ROOM_TTL_MS);
+            if (ALL_SESSIONS.length !== before) {
                 renderPublicSessions();
                 renderPrivateSessions();
             }
-        });
+        }
+
+        function initGlobalLobbyNetwork() {
+            if (typeof Peer === 'undefined') return;
+            tryBecomeLobbyHubOrConnect();
+
+            // Периодическая рассылка пульса активной комнаты, которую ждет текущий игрок
+            if (LOBBY_NET.heartbeatTimer) clearInterval(LOBBY_NET.heartbeatTimer);
+            LOBBY_NET.heartbeatTimer = setInterval(() => {
+                pruneExpiredSessions();
+                if (activeWaitingRoom && !MATCH) {
+                    activeWaitingRoom.updatedAt = Date.now();
+                    publishRoomToGlobalLobby(activeWaitingRoom);
+                }
+            }, 3500);
+        }
+
+        function tryBecomeLobbyHubOrConnect() {
+            if (typeof Peer === 'undefined') return;
+            const hubCandidate = new Peer(LOBBY_HUB_PEER_ID, { debug: 0 });
+
+            hubCandidate.on('open', () => {
+                // Это устройство стало главным координатором списка комнат (Hub Master)
+                LOBBY_NET.isHubMaster = true;
+                LOBBY_NET.hubPeer = hubCandidate;
+
+                hubCandidate.on('connection', (conn) => {
+                    conn.on('open', () => {
+                        LOBBY_NET.hubClients.set(conn.peer, conn);
+                        pruneExpiredSessions();
+                        conn.send({ type: 'LOBBY_SNAPSHOT', rooms: ALL_SESSIONS });
+                    });
+
+                    conn.on('data', (msg) => {
+                        handleHubIncomingMessage(msg, conn);
+                    });
+
+                    conn.on('close', () => {
+                        LOBBY_NET.hubClients.delete(conn.peer);
+                    });
+                });
+            });
+
+            hubCandidate.on('error', () => {
+                // Хаб уже запущен у другого игрока — подключаемся к нему как клиент
+                try { hubCandidate.destroy(); } catch (e) {}
+                LOBBY_NET.isHubMaster = false;
+                connectAsLobbyClient();
+            });
+        }
+
+        function connectAsLobbyClient() {
+            if (typeof Peer === 'undefined') return;
+            if (LOBBY_NET.clientPeer) {
+                try { LOBBY_NET.clientPeer.destroy(); } catch (e) {}
+            }
+            const clientPeer = new Peer({ debug: 0 });
+            LOBBY_NET.clientPeer = clientPeer;
+
+            clientPeer.on('open', () => {
+                const conn = clientPeer.connect(LOBBY_HUB_PEER_ID, { reliable: true });
+                LOBBY_NET.clientConn = conn;
+
+                conn.on('open', () => {
+                    conn.send({ type: 'REQUEST_SNAPSHOT' });
+                    if (activeWaitingRoom && !MATCH) {
+                        activeWaitingRoom.updatedAt = Date.now();
+                        conn.send({ type: 'UPSERT_ROOM', room: activeWaitingRoom });
+                    }
+                });
+
+                conn.on('data', (msg) => {
+                    if (msg && msg.type === 'LOBBY_SNAPSHOT' && Array.isArray(msg.rooms)) {
+                        ALL_SESSIONS = msg.rooms;
+                        pruneExpiredSessions();
+                        renderPublicSessions();
+                        renderPrivateSessions();
+                    }
+                });
+
+                conn.on('close', () => {
+                    // Если старый Хаб вышел из игры — перехватываем роль Хаба автоматически!
+                    setTimeout(() => tryBecomeLobbyHubOrConnect(), 1200);
+                });
+            });
+        }
+
+        function handleHubIncomingMessage(msg, senderConn) {
+            if (!msg || !msg.type) return;
+            pruneExpiredSessions();
+
+            if (msg.type === 'REQUEST_SNAPSHOT' && senderConn && senderConn.open) {
+                senderConn.send({ type: 'LOBBY_SNAPSHOT', rooms: ALL_SESSIONS });
+                return;
+            }
+
+            if (msg.type === 'UPSERT_ROOM' && msg.room) {
+                const room = { ...msg.room, updatedAt: Date.now() };
+                const idx = ALL_SESSIONS.findIndex(r => Number(r.id) === Number(room.id));
+                if (idx !== -1) {
+                    ALL_SESSIONS[idx] = room;
+                } else {
+                    ALL_SESSIONS.unshift(room);
+                }
+                broadcastLobbySnapshotFromHub();
+                renderPublicSessions();
+                renderPrivateSessions();
+            }
+
+            if (msg.type === 'REMOVE_ROOM' && msg.roomId !== undefined) {
+                ALL_SESSIONS = ALL_SESSIONS.filter(r => Number(r.id) !== Number(msg.roomId));
+                broadcastLobbySnapshotFromHub();
+                renderPublicSessions();
+                renderPrivateSessions();
+            }
+        }
+
+        function broadcastLobbySnapshotFromHub() {
+            if (!LOBBY_NET.isHubMaster) return;
+            pruneExpiredSessions();
+            for (const [peerId, conn] of LOBBY_NET.hubClients.entries()) {
+                if (conn && conn.open) {
+                    try {
+                        conn.send({ type: 'LOBBY_SNAPSHOT', rooms: ALL_SESSIONS });
+                    } catch (e) {}
+                } else {
+                    LOBBY_NET.hubClients.delete(peerId);
+                }
+            }
+        }
+
+        function publishRoomToGlobalLobby(roomObj) {
+            if (!roomObj) return;
+            roomObj.updatedAt = Date.now();
+            if (LOBBY_NET.isHubMaster) {
+                handleHubIncomingMessage({ type: 'UPSERT_ROOM', room: roomObj });
+            } else if (LOBBY_NET.clientConn && LOBBY_NET.clientConn.open) {
+                LOBBY_NET.clientConn.send({ type: 'UPSERT_ROOM', room: roomObj });
+                const idx = ALL_SESSIONS.findIndex(r => Number(r.id) === Number(roomObj.id));
+                if (idx !== -1) ALL_SESSIONS[idx] = roomObj;
+                else ALL_SESSIONS.unshift(roomObj);
+                renderPublicSessions();
+                renderPrivateSessions();
+            } else {
+                const idx = ALL_SESSIONS.findIndex(r => Number(r.id) === Number(roomObj.id));
+                if (idx !== -1) ALL_SESSIONS[idx] = roomObj;
+                else ALL_SESSIONS.unshift(roomObj);
+                renderPublicSessions();
+                renderPrivateSessions();
+                tryBecomeLobbyHubOrConnect();
+            }
+        }
+
+        function removeRoomFromGlobalLobby(roomId) {
+            if (roomId === undefined || roomId === null) return;
+            ALL_SESSIONS = ALL_SESSIONS.filter(r => Number(r.id) !== Number(roomId));
+            renderPublicSessions();
+            renderPrivateSessions();
+
+            if (LOBBY_NET.isHubMaster) {
+                broadcastLobbySnapshotFromHub();
+            } else if (LOBBY_NET.clientConn && LOBBY_NET.clientConn.open) {
+                LOBBY_NET.clientConn.send({ type: 'REMOVE_ROOM', roomId });
+            }
+        }
+
+        function requestLobbyRefresh() {
+            pruneExpiredSessions();
+            if (LOBBY_NET.isHubMaster) {
+                broadcastLobbySnapshotFromHub();
+            } else if (LOBBY_NET.clientConn && LOBBY_NET.clientConn.open) {
+                LOBBY_NET.clientConn.send({ type: 'REQUEST_SNAPSHOT' });
+            } else {
+                tryBecomeLobbyHubOrConnect();
+            }
+            renderPublicSessions();
+            renderPrivateSessions();
+            showToast('🔄 Список живых столов обновлен');
+        }
 
         let GAME_FILTERS = {
             minBet: 100,
@@ -1536,11 +1723,15 @@
                         return;
                     }
                     registerRealPlayerInLeaderboard(msg.guestName, msg.guestRp || 120, msg.guestCoins || 1500);
+                    // Как только второй игрок вошел — сразу убираем стол из открытого поиска, чтобы никто третий не мешал!
+                    const startedRoom = activeWaitingRoom;
+                    removeRoomFromGlobalLobby(startedRoom.id);
+                    activeWaitingRoom = null;
                     closeModal('waiting');
                     showToast(`🎉 ${msg.guestName} подключился к вашему столу!`);
-                    activeWaitingRoom.guestName = msg.guestName;
-                    activeWaitingRoom.guestRank = msg.guestRank;
-                    startNewGame(activeWaitingRoom, 'host');
+                    startedRoom.guestName = msg.guestName;
+                    startedRoom.guestRank = msg.guestRank;
+                    startNewGame(startedRoom, 'host');
                     sendMultiplayerStateToPeer();
                 }
 
@@ -1761,6 +1952,11 @@
                 openModal('shop');
                 return;
             }
+            // Если у игрока уже был старый открытый стол — удаляем его перед созданием нового
+            if (activeWaitingRoom) {
+                removeRoomFromGlobalLobby(activeWaitingRoom.id);
+            }
+
             const customTitle = document.getElementById('cr-room-title').value.trim();
             const customPass = document.getElementById('cr-room-pass').value.trim() || '7777';
             const roomCode = Math.floor(100 + Math.random() * 899);
@@ -1769,6 +1965,7 @@
                 id: roomCode,
                 title: customTitle || (CREATE_FORM.isPrivate ? `Приват #${roomCode}` : `Стол #${roomCode}`),
                 host: CURRENT_TG_USER.name || 'Вы',
+                hostId: String(CURRENT_TG_USER.id || ''),
                 rank: getRankObject(STATE.rp).name,
                 avatar: '😎',
                 bet: CREATE_FORM.bet,
@@ -1780,12 +1977,12 @@
                 allowDraw: CREATE_FORM.allowDraw,
                 throwRule: CREATE_FORM.throwRule,
                 isPrivate: CREATE_FORM.isPrivate,
-                password: CREATE_FORM.isPrivate ? customPass : ''
+                password: CREATE_FORM.isPrivate ? customPass : '',
+                updatedAt: Date.now()
             };
 
-            ALL_SESSIONS.unshift(newRoom);
-            saveLiveSessions();
             activeWaitingRoom = newRoom;
+            publishRoomToGlobalLobby(newRoom);
 
             document.getElementById('wait-room-title').textContent = newRoom.title;
             document.getElementById('wait-room-desc').textContent =
@@ -1841,10 +2038,7 @@
 
         function cancelWaitingRoom() {
             if (activeWaitingRoom) {
-                ALL_SESSIONS = ALL_SESSIONS.filter(s => s.id !== activeWaitingRoom.id);
-                saveLiveSessions();
-                renderPublicSessions();
-                renderPrivateSessions();
+                removeRoomFromGlobalLobby(activeWaitingRoom.id);
             }
             activeWaitingRoom = null;
             closeP2PSession();
@@ -1852,8 +2046,17 @@
         }
 
         function joinSessionById(id) {
-            const room = ALL_SESSIONS.find(s => s.id === id);
-            if (!room) return;
+            const room = ALL_SESSIONS.find(s => Number(s.id) === Number(id));
+            if (!room) {
+                showToast('Этот стол уже начался или был закрыт');
+                requestLobbyRefresh();
+                return;
+            }
+            if (activeWaitingRoom && Number(activeWaitingRoom.id) === Number(room.id)) {
+                showToast('Это ваш собственный стол — ожидайте подключения соперника!');
+                openModal('waiting');
+                return;
+            }
             if (STATE.coins < room.bet) {
                 showToast('Недостаточно монет для входа за этот стол!');
                 openModal('shop');
@@ -2756,10 +2959,18 @@
         }
 
         function leaveTableToLobby() {
+            if (MATCH && MATCH.room) {
+                removeRoomFromGlobalLobby(MATCH.room.id);
+            }
+            if (activeWaitingRoom) {
+                removeRoomFromGlobalLobby(activeWaitingRoom.id);
+                activeWaitingRoom = null;
+            }
             closeModal('result');
             closeP2PSession();
             document.getElementById('screen-table').classList.add('hidden');
             MATCH = null;
+            requestLobbyRefresh();
         }
 
         function rematchSameSettings() {
@@ -3460,6 +3671,7 @@
         window.onload = function () {
             initTelegramMiniApp();
             updateAdminVisibilityUI();
+            initGlobalLobbyNetwork();
             const today = new Date().toDateString();
             if (STATE.lastRefillDate !== today) {
                 if (STATE.coins < ADMIN_CONFIG.dailyRefillLimit) {
@@ -3474,6 +3686,12 @@
             renderPublicSessions();
             renderPrivateSessions();
         };
+
+        window.addEventListener('beforeunload', () => {
+            if (activeWaitingRoom) {
+                removeRoomFromGlobalLobby(activeWaitingRoom.id);
+            }
+        });
     </script>
 </body>
 </html>
