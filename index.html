@@ -195,6 +195,69 @@
                     </button>
                 </div>
 
+                <!-- Кнопка 1: БЫСТРАЯ ИГРА (100 - 150 монет) -->
+                <button onclick="startQuickMatch()" class="w-full p-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-700 hover:from-emerald-400 hover:to-teal-600 text-left shadow-xl shadow-emerald-950/60 border border-emerald-300/30 flex items-center justify-between active:scale-[0.99] transition">
+                    <div class="space-y-1">
+                        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/35 text-[10px] font-extrabold text-emerald-100">
+                            <span>⚡ АВТОПОДБОР СТОЛА</span>
+                            <span>•</span>
+                            <span>СТАВКА 100–150 🪙</span>
+                        </div>
+                        <div class="text-lg font-black text-white tracking-tight">Быстрая игра</div>
+                        <div class="text-xs text-emerald-100/90 font-medium">36 карт • Подкидной • Мгновенный старт</div>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center text-2xl shadow-inner">
+                        🃏
+                    </div>
+                </button>
+
+                <!-- Панель главных разделов: Инвентарь, Магазин, Достижения, Таблица лидеров -->
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button onclick="openModal('inventory')" class="bg-slate-800/85 hover:bg-slate-800 border border-slate-700/80 p-3.5 rounded-2xl text-left flex flex-col justify-between gap-2 active:scale-[0.98] transition">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-lg">🎒</span>
+                            <span id="home-inv-count" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">3 предм.</span>
+                        </div>
+                        <div>
+                            <div class="text-sm font-black text-white">Инвентарь</div>
+                            <div class="text-[11px] text-slate-400">Рубашки, карты и сукно</div>
+                        </div>
+                    </button>
+
+                    <button onclick="openModal('shop')" class="bg-slate-800/85 hover:bg-slate-800 border border-sky-500/30 p-3.5 rounded-2xl text-left flex flex-col justify-between gap-2 active:scale-[0.98] transition">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-500/30 flex items-center justify-center text-lg">🛍️</span>
+                            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300">Скины и ⭐️</span>
+                        </div>
+                        <div>
+                            <div class="text-sm font-black text-white">Магазин скинов</div>
+                            <div class="text-[11px] text-slate-400">Витрина скинов и валюта</div>
+                        </div>
+                    </button>
+
+                    <button onclick="openModal('achievements')" class="bg-slate-800/85 hover:bg-slate-800 border border-slate-700/80 p-3.5 rounded-2xl text-left flex flex-col justify-between gap-2 active:scale-[0.98] transition">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-lg">🏆</span>
+                            <span id="home-ach-count" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">0 / 6</span>
+                        </div>
+                        <div>
+                            <div class="text-sm font-black text-white">Достижения</div>
+                            <div class="text-[11px] text-slate-400">Награды и испытания</div>
+                        </div>
+                    </button>
+
+                    <button onclick="openModal('leaderboard')" class="bg-slate-800/85 hover:bg-slate-800 border border-slate-700/80 p-3.5 rounded-2xl text-left flex flex-col justify-between gap-2 active:scale-[0.98] transition">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-lg">📊</span>
+                            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">Топ-100</span>
+                        </div>
+                        <div>
+                            <div class="text-sm font-black text-white">Таблица лидеров</div>
+                            <div class="text-[11px] text-slate-400">Сезон 3 мес. • Ранг и 🪙</div>
+                        </div>
+                    </button>
+                </div>
+
                 <!-- Нижняя строка: Промокод для друзей и Админка (Админка скрыта для обычных игроков) -->
                 <div id="home-bottom-grid" class="grid grid-cols-1 gap-2.5 pt-1">
                     <button onclick="openModal('promo')" class="bg-slate-800/70 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3 flex items-center justify-between transition active:scale-95">
@@ -850,19 +913,6 @@
                 return;
             }
             openModal('admin');
-        }
-        }
-
-        function saveProfile() {
-            const selfUser = MOCK_USERS_DB.find(u => u.isSelf);
-            if (selfUser) {
-                selfUser.coins = STATE.coins;
-                selfUser.rp = STATE.rp;
-            }
-            try {
-                localStorage.setItem('durak_tma_release_v1', JSON.stringify(STATE));
-            } catch (e) {}
-            updateHeaderAndHomeUI();
         }
 
         function formatCompactNumber(num) {
