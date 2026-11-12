@@ -6,6 +6,8 @@
     <title>Дурак Онлайн — Telegram Mini App</title>
     <!-- Официальный SDK Telegram Mini Apps -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Бесплатный облачный P2P-мультиплеер между игроками без сервера (PeerJS WebRTC) -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -302,10 +304,15 @@
                         <h2 class="text-sm font-black text-white">Открытые столы</h2>
                         <p id="games-filter-summary" class="text-[11px] text-slate-400">Все ставки • 2–6 игр. • Любой режим</p>
                     </div>
-                    <button onclick="openModal('filters')" class="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-black flex items-center gap-1.5 active:scale-95 transition">
-                        <span>⚙️ Фильтры</span>
-                        <span id="active-filters-badge" class="hidden px-1.5 py-0.2 bg-emerald-500 text-slate-950 rounded-full text-[10px] font-black">!</span>
-                    </button>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="openModal('join-code')" class="px-3 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-xs font-black active:scale-95 transition">
+                            🔑 По коду
+                        </button>
+                        <button onclick="openModal('filters')" class="px-3 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-black flex items-center gap-1 active:scale-95 transition">
+                            <span>⚙️ Фильтры</span>
+                            <span id="active-filters-badge" class="hidden px-1.5 py-0.2 bg-emerald-500 text-slate-950 rounded-full text-[10px] font-black">!</span>
+                        </button>
+                    </div>
                 </div>
                 <div id="public-sessions-list" class="flex-1 overflow-y-auto space-y-2 pr-0.5"></div>
             </section>
@@ -315,11 +322,16 @@
                 <div class="flex items-center justify-between gap-2 mb-2.5 shrink-0">
                     <div>
                         <h2 class="text-sm font-black text-white">Приватные столы 🔒</h2>
-                        <p class="text-[11px] text-slate-400">Вход по PIN-паролю или ссылке для друзей</p>
+                        <p class="text-[11px] text-slate-400">Вход по коду комнаты или ссылке для друзей</p>
                     </div>
-                    <button onclick="openCreateWithPrivatePreset()" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold active:scale-95 transition">
-                        + Свой приват
-                    </button>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="openModal('join-code')" class="px-3 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-xs font-extrabold active:scale-95 transition">
+                            🔑 Ввести код
+                        </button>
+                        <button onclick="openCreateWithPrivatePreset()" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold active:scale-95 transition">
+                            + Свой приват
+                        </button>
+                    </div>
                 </div>
                 <div id="private-sessions-list" class="flex-1 overflow-y-auto space-y-2 pr-0.5"></div>
             </section>
@@ -687,19 +699,44 @@
                 <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-2xl mx-auto">⏳</div>
                 <h3 id="wait-room-title" class="text-base font-black text-white">Комната создана</h3>
                 <p id="wait-room-desc" class="text-xs text-slate-400"></p>
-                <div id="wait-pass-pill" class="bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-xs font-bold text-amber-300"></div>
+                <div class="bg-slate-950 border border-emerald-500/40 rounded-2xl py-2.5 px-3 space-y-1">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Код стола для друга:</div>
+                    <div id="wait-room-code-big" class="text-2xl font-black text-emerald-400 tracking-widest">#000</div>
+                    <div id="wait-pass-pill" class="text-[11px] font-bold text-amber-300"></div>
+                </div>
+                <div id="wait-p2p-status" class="text-[11px] font-bold text-sky-300 animate-pulse">
+                    📡 Ожидание подключения друга по коду или ссылке...
+                </div>
                 <div class="space-y-2 pt-1">
                     <button onclick="shareTelegramInvite()" class="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs">
-                        ✈️ Пригласить друга из Telegram
+                        ✈️ Отправить приглашение в Telegram
                     </button>
                     <button onclick="copyRoomInviteLink()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
-                        🔗 Скопировать ссылку и PIN
+                        🔗 Скопировать ссылку и Код стола
                     </button>
-                    <button onclick="startWaitingRoomNow()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs">
-                        ⚡ Подключить соперника и начать
+                    <button onclick="startWaitingRoomNow()" class="w-full py-2 rounded-xl bg-slate-800/70 hover:bg-slate-800 text-emerald-300 font-bold text-[11px] border border-slate-700">
+                        🤖 Не ждать друга (играть с ботом)
                     </button>
-                    <button onclick="closeModal('waiting')" class="w-full py-2 rounded-xl text-slate-500 text-xs font-bold">Отмена</button>
+                    <button onclick="cancelWaitingRoom()" class="w-full py-1.5 rounded-xl text-slate-500 text-xs font-bold">Отмена</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- МОДАЛКА: БЫСТРЫЙ ВХОД К ДРУГУ ПО КОДУ СТОЛА -->
+        <div id="modal-join-code" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-800 w-full max-w-xs rounded-3xl p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-black text-white">🔑 Войти к другу по коду</h3>
+                    <button onclick="closeModal('join-code')" class="text-slate-400 hover:text-white">✕</button>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">
+                    Введите 3-значный <b>Код стола</b> (который показан на экране у вашего друга), чтобы мгновенно подключиться к его партии:
+                </p>
+                <input id="join-room-code-input" type="number" placeholder="Например: 482" class="w-full bg-slate-950 border border-emerald-500/50 rounded-xl px-3 py-2.5 text-center text-lg font-black tracking-widest text-emerald-400 focus:outline-none">
+                <input id="join-room-pin-input" type="text" maxlength="8" placeholder="PIN-пароль (если приватный)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-center text-xs font-bold text-amber-300 focus:outline-none">
+                <button id="btn-connect-peer" onclick="connectToFriendRoomByCode()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs">
+                    🚀 Подключиться к столу
+                </button>
             </div>
         </div>
 
@@ -770,15 +807,17 @@
             { id: 'high_roller', title: 'Крупная рыба', desc: 'Выиграйте за столом со ставкой от 5 000 🪙', reward: 1500, icon: '💎' }
         ];
 
+        // ЖЕСТКАЯ ПРИВЯЗКА АДМИНКИ ТОЛЬКО К ТВОЕМУ TELEGRAM ID
+        const OWNER_TELEGRAM_ID = '1039670507';
+
         let ADMIN_CONFIG = {
-            botUsername: 'durak_online_bot',
+            botUsername: 'durak_play_game',
+            appShortName: '',
             dailyRefillLimit: 1500,
             rakePercent: 5,
             totalGamesPlayed: 0,
             totalStarsDonated: 0,
-            // Список разрешенных Telegram ID и ников владельца + секретный PIN
-            ownerTelegramIds: [],
-            ownerNames: ['FRG Admin', 'wiaral', 'Wiaral'],
+            ownerTelegramIds: [OWNER_TELEGRAM_ID],
             adminPin: '7777'
         };
 
@@ -823,6 +862,16 @@
             const savedAdm = localStorage.getItem('durak_tma_admin_cfg_v2');
             if (savedAdm) {
                 ADMIN_CONFIG = { ...ADMIN_CONFIG, ...JSON.parse(savedAdm) };
+            }
+            // Принудительно устанавливаем актуальный юзернейм бота @durak_play_game
+            if (!ADMIN_CONFIG.botUsername || ADMIN_CONFIG.botUsername === 'wiaral_durak_bot' || ADMIN_CONFIG.botUsername === 'durak_online_bot') {
+                ADMIN_CONFIG.botUsername = 'durak_play_game';
+            }
+            // Гарантируем, что твой ID 1039670507 всегда в списке владельцев
+            if (!Array.isArray(ADMIN_CONFIG.ownerTelegramIds)) {
+                ADMIN_CONFIG.ownerTelegramIds = [OWNER_TELEGRAM_ID];
+            } else if (!ADMIN_CONFIG.ownerTelegramIds.map(String).includes(OWNER_TELEGRAM_ID)) {
+                ADMIN_CONFIG.ownerTelegramIds.push(OWNER_TELEGRAM_ID);
             }
         } catch (e) {}
 
@@ -879,19 +928,11 @@
             updateHeaderAndHomeUI();
         }
 
-        // Проверка: является ли текущий аккаунт владельцем (админом)
+        // Проверка: является ли текущий аккаунт владельцем (строго по Telegram ID 1039670507)
         function isCurrentUserAdmin() {
             if (adminUnlockedInSession) return true;
             const uidStr = String(CURRENT_TG_USER.id || '');
-            if (uidStr && ADMIN_CONFIG.ownerTelegramIds.map(String).includes(uidStr)) {
-                return true;
-            }
-            const uname = (CURRENT_TG_USER.username || '').toLowerCase();
-            const dname = (CURRENT_TG_USER.name || '').toLowerCase();
-            return ADMIN_CONFIG.ownerNames.some(n => {
-                const target = n.toLowerCase();
-                return target === uname || target === dname;
-            });
+            return uidStr === OWNER_TELEGRAM_ID || ADMIN_CONFIG.ownerTelegramIds.map(String).includes(uidStr);
         }
 
         function updateAdminVisibilityUI() {
@@ -1298,110 +1339,425 @@
         let activeWaitingRoom = null;
         let pendingPrivateRoomId = null;
 
+        // ===================== P2P ОНЛАЙН-СИНХРОНИЗАЦИЯ МЕЖДУ ДВУМЯ ИГРОКАМИ (PeerJS WebRTC) =====================
+        let P2P = {
+            peer: null,
+            conn: null,
+            role: null, // 'host' | 'guest'
+            roomCode: null
+        };
+
+        function closeP2PSession() {
+            try {
+                if (P2P.conn) P2P.conn.close();
+                if (P2P.peer) P2P.peer.destroy();
+            } catch (e) {}
+            P2P = { peer: null, conn: null, role: null, roomCode: null };
+        }
+
+        function getPeerIdForRoomCode(code) {
+            return `durak_wiaral_room_${String(code).trim()}`;
+        }
+
+        function hostRoomOnP2P(roomObj) {
+            closeP2PSession();
+            if (typeof Peer === 'undefined') return;
+            const statusEl = document.getElementById('wait-p2p-status');
+            if (statusEl) statusEl.textContent = '📡 Открываем комнату в сети...';
+
+            const peerId = getPeerIdForRoomCode(roomObj.id);
+            const peer = new Peer(peerId, { debug: 0 });
+            P2P.peer = peer;
+            P2P.role = 'host';
+            P2P.roomCode = roomObj.id;
+
+            peer.on('open', () => {
+                if (statusEl) {
+                    statusEl.textContent = `🟢 Стол #${roomObj.id} открыт! Друг может войти по ссылке или коду #${roomObj.id}`;
+                }
+            });
+
+            peer.on('connection', (conn) => {
+                P2P.conn = conn;
+                setupP2PConnectionHandlers(conn);
+            });
+
+            peer.on('error', () => {
+                if (statusEl) {
+                    statusEl.textContent = `⚠️ Код #${roomObj.id} уже занят или сеть недоступна`;
+                }
+            });
+        }
+
+        function connectToFriendRoomByCode(autoCode, autoPin) {
+            const codeInput = document.getElementById('join-room-code-input');
+            const pinInput = document.getElementById('join-room-pin-input');
+            const code = String(autoCode || (codeInput ? codeInput.value.trim() : '')).replace('#', '');
+            const pin = String(autoPin !== undefined ? autoPin : (pinInput ? pinInput.value.trim() : ''));
+
+            if (!code) {
+                showToast('Введите 3-значный код стола!');
+                return;
+            }
+            if (typeof Peer === 'undefined') {
+                showToast('Ошибка загрузки сетевого модуля PeerJS');
+                return;
+            }
+
+            closeP2PSession();
+            const btn = document.getElementById('btn-connect-peer');
+            if (btn) btn.textContent = '⏳ Подключение к другу...';
+
+            const peer = new Peer({ debug: 0 });
+            P2P.peer = peer;
+            P2P.role = 'guest';
+            P2P.roomCode = code;
+
+            peer.on('open', () => {
+                const conn = peer.connect(getPeerIdForRoomCode(code), { reliable: true });
+                P2P.conn = conn;
+                setupP2PConnectionHandlers(conn, pin);
+
+                setTimeout(() => {
+                    if (!MATCH && P2P.role === 'guest') {
+                        if (btn) btn.textContent = '🚀 Подключиться к столу';
+                        showToast(`❌ Стол #${code} не найден. Убедитесь, что у друга открыто окно ожидания!`);
+                    }
+                }, 7000);
+            });
+
+            peer.on('error', () => {
+                if (btn) btn.textContent = '🚀 Подключиться к столу';
+                showToast(`❌ Не удалось найти комнату #${code}`);
+            });
+        }
+
+        function setupP2PConnectionHandlers(conn, guestPin = '') {
+            conn.on('open', () => {
+                if (P2P.role === 'guest') {
+                    conn.send({
+                        type: 'JOIN_REQUEST',
+                        guestName: CURRENT_TG_USER.name || 'Друг из Telegram',
+                        guestRank: getRankObject(STATE.rp).name,
+                        pin: guestPin
+                    });
+                }
+            });
+
+            conn.on('data', (msg) => {
+                if (!msg || !msg.type) return;
+
+                if (msg.type === 'JOIN_REQUEST' && P2P.role === 'host' && activeWaitingRoom) {
+                    if (activeWaitingRoom.isPrivate && activeWaitingRoom.password && msg.pin && msg.pin !== activeWaitingRoom.password) {
+                        conn.send({ type: 'JOIN_REJECTED', reason: 'Неверный PIN-пароль комнаты!' });
+                        return;
+                    }
+                    closeModal('waiting');
+                    showToast(`🎉 ${msg.guestName} подключился к вашему столу!`);
+                    activeWaitingRoom.guestName = msg.guestName;
+                    activeWaitingRoom.guestRank = msg.guestRank;
+                    startNewGame(activeWaitingRoom, 'host');
+                    sendMultiplayerStateToPeer();
+                }
+
+                if (msg.type === 'JOIN_REJECTED') {
+                    const btn = document.getElementById('btn-connect-peer');
+                    if (btn) btn.textContent = '🚀 Подключиться к столу';
+                    showToast(`❌ ${msg.reason || 'Отказ в подключении'}`);
+                    closeP2PSession();
+                }
+
+                if (msg.type === 'SYNC_STATE') {
+                    closeModal('join-code');
+                    closeModal('waiting');
+                    applyMultiplayerStateFromPeer(msg.payload);
+                }
+
+                if (msg.type === 'GUEST_ACTION' && P2P.role === 'host') {
+                    handleGuestActionOnHost(msg);
+                }
+
+                if (msg.type === 'EMOJI') {
+                    popEmojiOnSpot('opp-emoji-spot', msg.emoji);
+                }
+            });
+
+            conn.on('close', () => {
+                showToast('⚠️ Соединение с соперником прервано');
+            });
+        }
+
+        function isLiveP2PMatch() {
+            return Boolean(P2P.conn && P2P.conn.open && (P2P.role === 'host' || P2P.role === 'guest'));
+        }
+
+        function sendMultiplayerStateToPeer() {
+            if (!isLiveP2PMatch() || P2P.role !== 'host' || !MATCH) return;
+            const payload = {
+                room: MATCH.room,
+                trumpCard: MATCH.trumpCard,
+                trumpSuit: MATCH.trumpSuit,
+                deckCount: MATCH.deck.length,
+                hostCards: MATCH.playerHand,
+                guestCards: MATCH.oppHand,
+                tablePairs: MATCH.tablePairs,
+                attacker: MATCH.attacker,
+                defenderTakes: MATCH.defenderTakes,
+                cheatingAllowed: MATCH.cheatingAllowed,
+                hostCaught: MATCH.playerCaughtCheating,
+                guestCaught: MATCH.oppCaughtCheating,
+                unverifiedCheatOnSlot: MATCH.unverifiedOppCheatSlot,
+                unverifiedPlayerCheatSlot: MATCH.unverifiedPlayerCheatSlot,
+                hostName: CURRENT_TG_USER.name || 'Хост стола',
+                hostRank: getRankObject(STATE.rp).name,
+                gameOver: MATCH.gameOver,
+                winnerRole: MATCH.winnerRole || null
+            };
+            P2P.conn.send({ type: 'SYNC_STATE', payload });
+        }
+
+        function applyMultiplayerStateFromPeer(p) {
+            if (!p) return;
+            if (!MATCH) {
+                MATCH = {
+                    room: p.room,
+                    deck: [],
+                    trumpCard: p.trumpCard,
+                    trumpSuit: p.trumpSuit,
+                    playerHand: [],
+                    oppHand: [],
+                    tablePairs: [],
+                    attacker: 'opp',
+                    defenderTakes: false,
+                    playerEverTook: false,
+                    lastPlayerCardRank: null,
+                    cheatingAllowed: Boolean(p.cheatingAllowed),
+                    playerCaughtCheating: false,
+                    oppCaughtCheating: false,
+                    unverifiedOppCheatSlot: null,
+                    isP2PGuest: true,
+                    gameOver: false
+                };
+                document.getElementById('screen-table').classList.remove('hidden');
+                const feltSkin = SKINS_CATALOG.find(s => s.id === STATE.equipped.felt) || SKINS_CATALOG[7];
+                document.getElementById('screen-table').className = `absolute inset-0 z-40 flex flex-col justify-between p-2.5 transition-colors duration-300 ${feltSkin.css}`;
+                document.getElementById('table-opp-avatar').textContent = '😎';
+                document.getElementById('table-opp-name').textContent = p.hostName || 'Создатель стола';
+                document.getElementById('table-opp-rank').textContent = p.hostRank || 'Бронза';
+                document.getElementById('table-rules-line').textContent =
+                    `${p.room.mode === 'podkidnoy' ? 'Подкидной' : 'Переводной'} • ${p.room.deckSize} карт • P2P Онлайн`;
+                document.getElementById('table-pot').textContent = (p.room.bet * 2).toLocaleString('ru-RU');
+            }
+
+            MATCH.deck = new Array(p.deckCount).fill({});
+            MATCH.trumpCard = p.trumpCard;
+            MATCH.trumpSuit = p.trumpSuit;
+            // Для гостя его рука — это guestCards, а рука соперника — hostCards
+            MATCH.playerHand = sortHandCards(p.guestCards || []);
+            MATCH.oppHand = p.hostCards || [];
+            MATCH.tablePairs = p.tablePairs || [];
+            MATCH.attacker = p.attacker === 'player' ? 'opp' : 'player';
+            MATCH.defenderTakes = p.defenderTakes;
+            MATCH.playerCaughtCheating = p.guestCaught;
+            MATCH.oppCaughtCheating = p.hostCaught;
+            MATCH.unverifiedOppCheatSlot = p.unverifiedPlayerCheatSlot;
+
+            renderTableState();
+
+            if (p.gameOver && !MATCH.gameOver) {
+                MATCH.gameOver = true;
+                if (p.winnerRole === 'draw') {
+                    concludeMatch('draw', 'Партия с другом завершилась вничью!');
+                } else if (p.winnerRole === 'guest') {
+                    concludeMatch('win', 'Вы обыграли друга в онлайн-партии!');
+                } else {
+                    concludeMatch('lose', 'Друг вышел из партии победителем.');
+                }
+            }
+        }
+
+        function handleGuestActionOnHost(msg) {
+            if (!MATCH || MATCH.gameOver) return;
+            if (msg.action === 'PLAY_CARD') {
+                const idx = MATCH.oppHand.findIndex(c => c.id === msg.cardId);
+                if (idx === -1) return;
+                const [card] = MATCH.oppHand.splice(idx, 1);
+
+                if (MATCH.attacker === 'opp') {
+                    const legal = isLegalAttack(card);
+                    MATCH.tablePairs.push({ attack: card, defense: null, cheatedByOpp: !legal });
+                    if (!legal) {
+                        MATCH.unverifiedOppCheatSlot = { type: 'attack', pairIndex: MATCH.tablePairs.length - 1, card };
+                    }
+                } else {
+                    const targetIdx = MATCH.tablePairs.findIndex(p => !p.defense);
+                    if (targetIdx !== -1) {
+                        const legal = isLegalDefense(MATCH.tablePairs[targetIdx].attack, card);
+                        MATCH.tablePairs[targetIdx].defense = card;
+                        MATCH.tablePairs[targetIdx].cheatedByOpp = !legal;
+                        if (!legal) {
+                            MATCH.unverifiedOppCheatSlot = { type: 'defense', pairIndex: targetIdx, card };
+                        }
+                    }
+                }
+                renderTableState();
+                checkInstantVictory();
+                sendMultiplayerStateToPeer();
+            } else if (msg.action === 'BITO') {
+                if (MATCH.attacker === 'opp') {
+                    finishBoutBito();
+                }
+            } else if (msg.action === 'TAKE') {
+                if (MATCH.attacker === 'player') {
+                    MATCH.defenderTakes = true;
+                    finishBoutTake('opp');
+                }
+            } else if (msg.action === 'CATCH_CHEAT') {
+                if (MATCH.unverifiedPlayerCheatSlot !== null && MATCH.unverifiedPlayerCheatSlot !== undefined) {
+                    const slotInfo = MATCH.unverifiedPlayerCheatSlot;
+                    const pair = MATCH.tablePairs[slotInfo.pairIndex];
+                    if (pair) {
+                        if (slotInfo.type === 'attack') {
+                            MATCH.playerHand.push(pair.attack);
+                            MATCH.tablePairs.splice(slotInfo.pairIndex, 1);
+                        } else if (slotInfo.type === 'defense' && pair.defense) {
+                            MATCH.playerHand.push(pair.defense);
+                            pair.defense = null;
+                        }
+                    }
+                    MATCH.playerCaughtCheating = true;
+                    MATCH.unverifiedPlayerCheatSlot = null;
+                    showToast('🚨 Друг поймал вас на шулерстве! Карта возвращена.');
+                    renderTableState();
+                    sendMultiplayerStateToPeer();
+                }
+            }
+        }
+
+        // ===================== СОЗДАНИЕ СТОЛА И ПРИГЛАСИТЕЛЬНЫЕ ССЫЛКИ В TELEGRAM =====================
         function submitCreateGame() {
             if (STATE.coins < CREATE_FORM.bet) {
-                showToast('Недостаточно монет для выбранной ставки! Загляните в Магазин.');
+                showToast('Недостаточно монет для выбранной ставки!');
                 openModal('shop');
                 return;
             }
-            const titleInput = document.getElementById('cr-room-title').value.trim();
-            const passInput = document.getElementById('cr-room-pass').value.trim() || '7777';
+            const customTitle = document.getElementById('cr-room-title').value.trim();
+            const customPass = document.getElementById('cr-room-pass').value.trim() || '7777';
+            const roomCode = Math.floor(100 + Math.random() * 899);
+
             const newRoom = {
-                id: Math.floor(300 + Math.random() * 600),
-                title: titleInput || (CREATE_FORM.isPrivate ? 'Приват для друзей' : `Стол #${Math.floor(100 + Math.random() * 899)}`),
-                host: CURRENT_TG_USER.name || 'Игрок',
-                avatar: '😎',
+                id: roomCode,
+                title: customTitle || (CREATE_FORM.isPrivate ? `Приват #${roomCode}` : `Стол #${roomCode}`),
+                host: CURRENT_TG_USER.name || 'Вы',
                 rank: getRankObject(STATE.rp).name,
+                avatar: '😎',
                 bet: CREATE_FORM.bet,
-                maxPlayers: CREATE_FORM.maxPlayers,
                 curPlayers: 1,
+                maxPlayers: CREATE_FORM.maxPlayers,
                 deckSize: CREATE_FORM.deckSize,
                 mode: CREATE_FORM.mode,
                 cheating: CREATE_FORM.cheating,
                 allowDraw: CREATE_FORM.allowDraw,
                 throwRule: CREATE_FORM.throwRule,
                 isPrivate: CREATE_FORM.isPrivate,
-                password: passInput
+                password: CREATE_FORM.isPrivate ? customPass : ''
             };
+
             ALL_SESSIONS.unshift(newRoom);
             saveLiveSessions();
             activeWaitingRoom = newRoom;
 
             document.getElementById('wait-room-title').textContent = newRoom.title;
             document.getElementById('wait-room-desc').textContent =
-                `Ставка ${formatCompactNumber(newRoom.bet)} 🪙 • Колода ${newRoom.deckSize} • ${newRoom.mode === 'podkidnoy' ? 'Подкидной' : 'Переводной'} • ${newRoom.cheating ? 'С шулером 🎭' : 'Честная 🛡️'}`;
+                `Ставка: ${formatCompactNumber(newRoom.bet)} 🪙 • ${newRoom.deckSize} карт • ${newRoom.mode === 'podkidnoy' ? 'Подкидной' : 'Переводной'} • ${newRoom.cheating ? 'С шулером' : 'Честная'}`;
+            document.getElementById('wait-room-code-big').textContent = `#${newRoom.id}`;
             document.getElementById('wait-pass-pill').textContent = newRoom.isPrivate
-                ? `🔒 Приватный стол • PIN-пароль: ${newRoom.password}`
-                : `🌐 Открытый стол • Ожидание соперника`;
+                ? `🔒 PIN-пароль: ${newRoom.password}`
+                : '🌐 Открытый вход без пароля';
+
             openModal('waiting');
+            hostRoomOnP2P(newRoom);
         }
 
-        function copyTextToClipboard(text) {
-            const area = document.createElement('textarea');
-            area.value = text;
-            document.body.appendChild(area);
-            area.select();
-            try { document.execCommand('copy'); } catch (e) {}
-            document.body.removeChild(area);
+        function getRoomInviteUrl(room) {
+            const r = room || activeWaitingRoom || { id: 777, isPrivate: false, password: '', bet: 250, mode: 'podkidnoy', deckSize: 36 };
+            const cleanBot = (ADMIN_CONFIG.botUsername || 'durak_play_game').replace('@', '').trim();
+            const cleanShortName = (ADMIN_CONFIG.appShortName || '').replace(/\//g, '').trim();
+            // Кодируем код комнаты и параметры в startapp (только разрешенные Telegram символы A-Z, a-z, 0-9, _, -)
+            const startParam = `room_${r.id}_${r.isPrivate ? r.password : 'open'}_${r.bet}`;
+            if (cleanShortName) {
+                return `https://t.me/${cleanBot}/${cleanShortName}?startapp=${startParam}`;
+            }
+            // Универсальная ссылка Main Mini App (работает во всех клиентах Telegram без short_name!)
+            return `https://t.me/${cleanBot}?startapp=${startParam}`;
         }
 
         function shareTelegramInvite() {
-            if (!activeWaitingRoom) return;
-            const botUser = ADMIN_CONFIG.botUsername || 'durak_online_bot';
-            // Кодируем параметры комнаты прямо в ссылку, чтобы друг с другого телефона увидел именно этот стол!
-            const roomPayload = [
-                activeWaitingRoom.id,
-                activeWaitingRoom.bet,
-                activeWaitingRoom.deckSize,
-                activeWaitingRoom.mode === 'perevodnoy' ? 'per' : 'pod',
-                activeWaitingRoom.cheating ? '1' : '0',
-                activeWaitingRoom.isPrivate ? activeWaitingRoom.password : 'open'
-            ].join('_');
-            const startParam = `room_${roomPayload}`;
-            const miniAppUrl = `https://t.me/${botUser}?startapp=${startParam}`;
-            const passText = activeWaitingRoom.isPrivate ? ` (PIN-пароль: ${activeWaitingRoom.password})` : '';
-            const inviteText = `🃏 Заходи ко мне за стол в «Дурак Онлайн»! Комната #${activeWaitingRoom.id}${passText}, ставка ${formatCompactNumber(activeWaitingRoom.bet)} 🪙, колода ${activeWaitingRoom.deckSize} карт!`;
-            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(miniAppUrl)}&text=${encodeURIComponent(inviteText)}`;
+            const r = activeWaitingRoom || { id: 777, title: 'Дурак Онлайн', bet: 250, isPrivate: false, password: '' };
+            const inviteUrl = getRoomInviteUrl(r);
+            const text = `🃏 Заходи ко мне за стол в Дурак Онлайн!\n🔢 Код стола: #${r.id}\n💰 Ставка: ${formatCompactNumber(r.bet)} 🪙${r.isPrivate ? `\n🔑 PIN-пароль: ${r.password}` : ''}\n(Если ссылка открыла главное меню — нажми «🔑 По коду» и введи ${r.id})`;
+            const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent(text)}`;
 
-            triggerHaptic('light');
-            copyTextToClipboard(`${inviteText}\n${miniAppUrl}`);
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-                window.Telegram.WebApp.openTelegramLink(shareUrl);
+            if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.openTelegramLink === 'function') {
+                window.Telegram.WebApp.openTelegramLink(tgShareUrl);
             } else {
-                window.open(shareUrl, '_blank');
+                window.open(tgShareUrl, '_blank');
             }
-            showToast('✈️ Приглашение отправлено в Telegram!');
+            showToast('✈️ Окно приглашения друга в Telegram открыто');
         }
 
         function copyRoomInviteLink() {
-            if (!activeWaitingRoom) return;
-            const botUser = ADMIN_CONFIG.botUsername || 'durak_online_bot';
-            const roomPayload = [
-                activeWaitingRoom.id,
-                activeWaitingRoom.bet,
-                activeWaitingRoom.deckSize,
-                activeWaitingRoom.mode === 'perevodnoy' ? 'per' : 'pod',
-                activeWaitingRoom.cheating ? '1' : '0',
-                activeWaitingRoom.isPrivate ? activeWaitingRoom.password : 'open'
-            ].join('_');
-            const passText = activeWaitingRoom.isPrivate ? ` (PIN: ${activeWaitingRoom.password})` : '';
-            const link = `https://t.me/${botUser}?startapp=room_${roomPayload}${passText}`;
-            copyTextToClipboard(link);
-            showToast('🔗 Инвайт-ссылка скопирована!');
+            const r = activeWaitingRoom || { id: 777, isPrivate: false, password: '', bet: 250 };
+            const inviteUrl = getRoomInviteUrl(r);
+            const fullCopyText = `${inviteUrl}\nКод стола: ${r.id}${r.isPrivate ? ` | PIN: ${r.password}` : ''}`;
+            const temp = document.createElement('textarea');
+            temp.value = fullCopyText;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast(`🔗 Ссылка и код стола #${r.id} скопированы!`);
         }
 
         function startWaitingRoomNow() {
-            if (!activeWaitingRoom) return;
             const room = activeWaitingRoom;
             closeModal('waiting');
-            startNewGame(room);
+            closeP2PSession();
+            if (room) startNewGame(room);
+        }
+
+        function cancelWaitingRoom() {
+            if (activeWaitingRoom) {
+                ALL_SESSIONS = ALL_SESSIONS.filter(s => s.id !== activeWaitingRoom.id);
+                saveLiveSessions();
+                renderPublicSessions();
+                renderPrivateSessions();
+            }
+            activeWaitingRoom = null;
+            closeP2PSession();
+            closeModal('waiting');
+        }
+
+        function joinSessionById(id) {
+            const room = ALL_SESSIONS.find(s => s.id === id);
+            if (!room) return;
+            if (STATE.coins < room.bet) {
+                showToast('Недостаточно монет для входа за этот стол!');
+                openModal('shop');
+                return;
+            }
+            // Пробуем подключиться по P2P к живому хосту этой комнаты
+            document.getElementById('join-room-code-input').value = room.id;
+            document.getElementById('join-room-pin-input').value = '';
+            openModal('join-code');
+            connectToFriendRoomByCode(room.id, '');
         }
 
         function promptPrivateJoin(id) {
             const room = ALL_SESSIONS.find(s => s.id === id);
             if (!room) return;
             pendingPrivateRoomId = id;
-            document.getElementById('pass-modal-room').textContent = `${room.title} • Создатель: ${room.host} • Ставка ${formatCompactNumber(room.bet)} 🪙`;
+            document.getElementById('pass-modal-room').textContent = `${room.title} • Код стола #${room.id} • Ставка ${formatCompactNumber(room.bet)} 🪙`;
             document.getElementById('pass-modal-input').value = '';
             openModal('password');
         }
@@ -1409,39 +1765,29 @@
         function confirmPrivateJoin() {
             const room = ALL_SESSIONS.find(s => s.id === pendingPrivateRoomId);
             if (!room) return;
-            const entered = document.getElementById('pass-modal-input').value.trim();
-            if (entered !== room.password) {
+            const val = document.getElementById('pass-modal-input').value.trim();
+            if (room.password && val !== room.password) {
                 showToast('❌ Неверный PIN-пароль!');
                 return;
             }
             closeModal('password');
-            joinSessionById(room.id);
-        }
-
-        function joinSessionById(id) {
-            const room = ALL_SESSIONS.find(s => s.id === id);
-            if (!room) return;
-            if (STATE.coins < room.bet) {
-                showToast(`Недостаточно монет для ставки ${formatCompactNumber(room.bet)} 🪙!`);
-                openModal('shop');
-                return;
-            }
-            startNewGame(room);
+            connectToFriendRoomByCode(room.id, val);
         }
 
         function startQuickMatch() {
             const bet = STATE.coins >= 150 ? 150 : 100;
             if (STATE.coins < 100) {
-                showToast('У вас меньше 100 🪙! Нажмите «Забрать» для пополнения до 1 500 🪙.');
+                showToast('Недостаточно монет! Воспользуйтесь бесплатным бонусом до 1 500 🪙.');
+                openModal('shop');
                 return;
             }
             startNewGame({
                 id: 999,
                 title: 'Быстрая игра',
-                host: 'Максим_Про',
+                host: 'Соперник_ТГ',
+                rank: getRankObject(STATE.rp).name,
                 avatar: '🦊',
-                rank: 'Золото',
-                bet: bet,
+                bet,
                 maxPlayers: 2,
                 deckSize: 36,
                 mode: 'podkidnoy',
@@ -1451,45 +1797,40 @@
             });
         }
 
-        // ===================== 4. ДВИЖОК «ДУРАК ОНЛАЙН» + ПЛАВНАЯ GPU-АНИМАЦИЯ + ШУЛЕРСТВО =====================
+        // ===================== 4. ИГРОВОЙ ДВИЖОК ДУРАКА + GPU-АНИМАЦИЯ КАРТ =====================
         const SUITS = [
-            { id: 's', symbol: '♠', color: 'text-slate-900 dark:text-white', isRed: false },
-            { id: 'c', symbol: '♣', color: 'text-slate-900 dark:text-white', isRed: false },
-            { id: 'h', symbol: '♥', color: 'text-rose-600', isRed: true },
-            { id: 'd', symbol: '♦', color: 'text-rose-600', isRed: true }
+            { id: 's', symbol: '♠', color: 'black' },
+            { id: 'c', symbol: '♣', color: 'black' },
+            { id: 'h', symbol: '♥', color: 'red' },
+            { id: 'd', symbol: '♦', color: 'red' }
+        ];
+
+        const RANKS_52 = [
+            { rank: '2', weight: 2 }, { rank: '3', weight: 3 }, { rank: '4', weight: 4 },
+            { rank: '5', weight: 5 }, { rank: '6', weight: 6 }, { rank: '7', weight: 7 },
+            { rank: '8', weight: 8 }, { rank: '9', weight: 9 }, { rank: '10', weight: 10 },
+            { rank: 'J', weight: 11 }, { rank: 'Q', weight: 12 }, { rank: 'K', weight: 13 },
+            { rank: 'A', weight: 14 }
         ];
 
         let MATCH = null;
 
-        function buildDeckBySize(deckSize) {
-            let ranks = [];
-            if (deckSize === 24) {
-                ranks = [
-                    { v: 9, l: '9' }, { v: 10, l: '10' }, { v: 11, l: 'J' },
-                    { v: 12, l: 'Q' }, { v: 13, l: 'K' }, { v: 14, l: 'A' }
-                ];
-            } else if (deckSize === 52) {
-                ranks = [
-                    { v: 2, l: '2' }, { v: 3, l: '3' }, { v: 4, l: '4' }, { v: 5, l: '5' },
-                    { v: 6, l: '6' }, { v: 7, l: '7' }, { v: 8, l: '8' }, { v: 9, l: '9' },
-                    { v: 10, l: '10' }, { v: 11, l: 'J' }, { v: 12, l: 'Q' }, { v: 13, l: 'K' }, { v: 14, l: 'A' }
-                ];
-            } else {
-                ranks = [
-                    { v: 6, l: '6' }, { v: 7, l: '7' }, { v: 8, l: '8' }, { v: 9, l: '9' },
-                    { v: 10, l: '10' }, { v: 11, l: 'J' }, { v: 12, l: 'Q' }, { v: 13, l: 'K' }, { v: 14, l: 'A' }
-                ];
-            }
+        function buildDeck(deckSize) {
+            let minWeight = 6;
+            if (deckSize === 24) minWeight = 9;
+            if (deckSize === 52) minWeight = 2;
+
+            const ranks = RANKS_52.filter(r => r.weight >= minWeight);
             const deck = [];
             for (const s of SUITS) {
                 for (const r of ranks) {
                     deck.push({
-                        uid: `${r.l}${s.id}_${Math.random().toString(36).slice(2, 6)}`,
-                        value: r.v,
-                        label: r.l,
+                        id: `${r.rank}${s.id}`,
+                        rank: r.rank,
+                        weight: r.weight,
                         suit: s.id,
                         symbol: s.symbol,
-                        isRed: s.isRed
+                        isRed: s.color === 'red'
                     });
                 }
             }
@@ -1500,789 +1841,909 @@
             return deck;
         }
 
-        function canCardBeatStrict(attackCard, defendCard, trumpSuit) {
-            if (defendCard.suit === attackCard.suit) {
-                return defendCard.value > attackCard.value;
+        function animateCardFlight(fromRect, toRect, cardData, showFace, onComplete) {
+            if (!fromRect || !toRect) {
+                if (onComplete) onComplete();
+                return;
             }
-            return defendCard.suit === trumpSuit && attackCard.suit !== trumpSuit;
-        }
-
-        function getTableRanksSet() {
-            const set = new Set();
-            if (!MATCH) return set;
-            for (const pair of MATCH.table) {
-                set.add(pair.attack.value);
-                if (pair.defend) set.add(pair.defend.value);
-            }
-            return set;
-        }
-
-        function animateCardFlight(fromRect, toRect, cardData, faceUp = true, rotDeg = 0) {
-            if (!fromRect || !toRect) return;
             const layer = document.getElementById('flying-layer');
             const el = document.createElement('div');
-            const backSkin = SKINS_CATALOG.find(s => s.id === STATE.equipped.back)?.css || 'back-classic';
-            const faceSkin = SKINS_CATALOG.find(s => s.id === STATE.equipped.face)?.css || 'face-classic';
+            const faceCss = SKINS_CATALOG.find(s => s.id === STATE.equipped.face)?.css || 'face-classic';
+            const backCss = SKINS_CATALOG.find(s => s.id === STATE.equipped.back)?.css || 'back-classic';
 
-            el.className = `flying-card ${faceUp && cardData ? faceSkin : backSkin}`;
-            if (faceUp && cardData) {
-                const textColor = cardData.isRed ? 'text-rose-500' : (faceSkin === 'face-dark' ? 'text-white' : 'text-slate-900');
+            el.className = `flying-card ${showFace && cardData ? faceCss : backCss} flex flex-col justify-between p-1.5`;
+            if (showFace && cardData) {
+                const col = cardData.isRed ? 'text-rose-600' : '';
                 el.innerHTML = `
-                    <div class="p-1.5 h-full flex flex-col justify-between ${textColor}">
-                        <div class="text-xs font-black leading-none">${cardData.label}${cardData.symbol}</div>
-                        <div class="text-2xl self-center">${cardData.symbol}</div>
-                        <div class="text-[10px] font-bold self-end rotate-180 leading-none">${cardData.label}</div>
-                    </div>`;
+                    <div class="text-xs font-black leading-none ${col}">${cardData.rank}${cardData.symbol}</div>
+                    <div class="text-xl self-center leading-none ${col}">${cardData.symbol}</div>
+                    <div class="text-[10px] font-bold self-end rotate-180 leading-none ${col}">${cardData.rank}</div>
+                `;
             }
 
-            el.style.transform = `translate3d(${fromRect.left}px, ${fromRect.top}px, 0) scale(0.88) rotate(0deg)`;
+            el.style.transform = `translate3d(${fromRect.left}px, ${fromRect.top}px, 0) rotate(-6deg) scale(0.92)`;
             layer.appendChild(el);
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    el.style.transform = `translate3d(${toRect.left}px, ${toRect.top}px, 0) scale(1) rotate(${rotDeg}deg)`;
+                    el.style.transform = `translate3d(${toRect.left}px, ${toRect.top}px, 0) rotate(0deg) scale(1)`;
                 });
             });
 
             setTimeout(() => {
                 el.remove();
-            }, 290);
+                if (onComplete) onComplete();
+            }, 280);
         }
 
-        function startNewGame(roomConfig) {
-            STATE.coins -= roomConfig.bet;
+        function startNewGame(room, multiplayerRole = null) {
+            STATE.coins -= room.bet;
             ADMIN_CONFIG.totalGamesPlayed += 1;
+            saveAdminConfigStorage();
             saveProfile();
 
-            const deck = buildDeckBySize(roomConfig.deckSize || 36);
+            const deck = buildDeck(room.deckSize || 36);
             const trumpCard = deck[0];
-            const playerHand = deck.splice(deck.length - 6, 6);
-            const oppHand = deck.splice(deck.length - 6, 6);
 
             MATCH = {
-                room: roomConfig,
-                bet: roomConfig.bet,
-                pot: roomConfig.bet * 2,
+                room,
                 deck,
                 trumpCard,
                 trumpSuit: trumpCard.suit,
-                playerHand,
-                oppHand,
-                table: [],
-                turn: 'player',
-                defenderTaking: false,
-                playerTookAny: false,
-                lastPlayerAttackCard: null,
-                playerCanCheat: !!roomConfig.cheating,
-                oppCanCheat: !!roomConfig.cheating,
-                unpunishedPlayerCheat: false,
-                activeOppCheatIndex: null,
-                finished: false
+                playerHand: [],
+                oppHand: [],
+                tablePairs: [],
+                attacker: 'player',
+                defenderTakes: false,
+                playerEverTook: false,
+                lastPlayerCardRank: null,
+                cheatingAllowed: Boolean(room.cheating),
+                playerCaughtCheating: false,
+                oppCaughtCheating: false,
+                unverifiedOppCheatSlot: null,
+                unverifiedPlayerCheatSlot: null,
+                isP2PHost: multiplayerRole === 'host',
+                isP2PGuest: multiplayerRole === 'guest',
+                gameOver: false
             };
 
-            const feltCss = SKINS_CATALOG.find(s => s.id === STATE.equipped.felt)?.css || 'felt-emerald';
             const tableEl = document.getElementById('screen-table');
-            tableEl.className = `absolute inset-0 z-40 flex flex-col justify-between p-2.5 transition-colors duration-300 ${feltCss}`;
+            const feltSkin = SKINS_CATALOG.find(s => s.id === STATE.equipped.felt) || SKINS_CATALOG[7];
+            tableEl.className = `absolute inset-0 z-40 flex flex-col justify-between p-2.5 transition-colors duration-300 ${feltSkin.css}`;
+            tableEl.classList.remove('hidden');
 
-            document.getElementById('table-opp-avatar').textContent = roomConfig.avatar || '🤖';
-            document.getElementById('table-opp-name').textContent = roomConfig.host === 'Вы' ? 'Соперник_ТГ' : roomConfig.host;
-            document.getElementById('table-opp-rank').textContent = roomConfig.rank || 'Золото';
-            document.getElementById('table-pot').textContent = MATCH.pot.toLocaleString('ru-RU');
+            document.getElementById('table-opp-avatar').textContent = room.guestName ? '😎' : (room.avatar || '🤖');
+            document.getElementById('table-opp-name').textContent = room.guestName || (room.host === (CURRENT_TG_USER.name || 'Вы') ? 'Соперник_ТГ' : room.host);
+            document.getElementById('table-opp-rank').textContent = room.guestRank || room.rank || 'Золото';
             document.getElementById('table-rules-line').textContent =
-                `${roomConfig.mode === 'perevodnoy' ? 'Переводной' : 'Подкидной'} • ${roomConfig.deckSize} карт • ${roomConfig.allowDraw ? 'Ничья' : 'Классика'}`;
+                `${room.mode === 'podkidnoy' ? 'Подкидной' : 'Переводной'} • ${room.deckSize} карт • ${room.allowDraw ? 'Ничья' : 'Классика'}`;
+            document.getElementById('table-pot').textContent = (room.bet * 2).toLocaleString('ru-RU');
+            document.getElementById('table-cheat-indicator').textContent = room.cheating ? '🎭 С шулером' : '🛡️ Честная';
 
+            for (let i = 0; i < 6; i++) {
+                MATCH.playerHand.push(MATCH.deck.pop());
+                MATCH.oppHand.push(MATCH.deck.pop());
+            }
+            sortPlayerHand();
             renderTableState();
 
-            setTimeout(() => {
-                const deckRect = document.getElementById('deck-anchor').getBoundingClientRect();
-                const playerRect = document.getElementById('player-hand-fan').getBoundingClientRect();
-                const oppRect = document.getElementById('opp-hand-fan').getBoundingClientRect();
-                for (let i = 0; i < 4; i++) {
-                    setTimeout(() => {
-                        animateCardFlight(deckRect, { left: playerRect.left + 110 + i * 22, top: playerRect.top + 10 }, MATCH.playerHand[i], true, (i - 2) * 5);
-                        animateCardFlight(deckRect, { left: oppRect.left + 90 + i * 16, top: oppRect.top }, null, false, 0);
-                    }, i * 55);
-                }
-            }, 50);
+            const deckRect = document.getElementById('deck-pile-box').getBoundingClientRect();
+            const handRect = document.getElementById('player-hand-fan').getBoundingClientRect();
+            for (let i = 0; i < 4; i++) {
+                setTimeout(() => {
+                    animateCardFlight(
+                        deckRect,
+                        { left: handRect.left + handRect.width / 2 - 30 + (i - 1.5) * 28, top: handRect.top + 10 },
+                        MATCH.playerHand[i],
+                        true
+                    );
+                }, i * 55);
+            }
         }
 
-        function sortPlayerCards(hand, trumpSuit) {
-            hand.sort((a, b) => {
-                const aT = a.suit === trumpSuit ? 1 : 0;
-                const bT = b.suit === trumpSuit ? 1 : 0;
-                if (aT !== bT) return aT - bT;
-                return a.value - b.value;
+        function sortHandCards(arr) {
+            if (!MATCH) return arr;
+            return arr.slice().sort((a, b) => {
+                const aTrump = a.suit === MATCH.trumpSuit ? 1 : 0;
+                const bTrump = b.suit === MATCH.trumpSuit ? 1 : 0;
+                if (aTrump !== bTrump) return aTrump - bTrump;
+                return a.weight - b.weight;
             });
         }
 
-        function isCardLegalForPlayer(card) {
-            if (!MATCH || MATCH.finished) return false;
-            const uncovered = MATCH.table.find(p => !p.defend);
+        function sortPlayerHand() {
+            if (!MATCH) return;
+            MATCH.playerHand = sortHandCards(MATCH.playerHand);
+        }
 
-            if (MATCH.turn === 'player') {
-                if (MATCH.table.length >= 6 || MATCH.oppHand.length === 0) return false;
-                if (MATCH.table.length === 0) return true;
-                const ranks = getTableRanksSet();
-                return ranks.has(card.value);
-            } else {
-                if (!uncovered || MATCH.defenderTaking) return false;
-                if (canCardBeatStrict(uncovered.attack, card, MATCH.trumpSuit)) return true;
-                if (
-                    MATCH.room.mode === 'perevodnoy' &&
-                    MATCH.table.every(p => !p.defend) &&
-                    card.value === uncovered.attack.value &&
-                    MATCH.oppHand.length >= MATCH.table.length + 1
-                ) {
-                    return true;
-                }
-                return false;
+        function isLegalAttack(card) {
+            if (MATCH.tablePairs.length === 0) return true;
+            const ranksOnTable = new Set();
+            for (const p of MATCH.tablePairs) {
+                ranksOnTable.add(p.attack.rank);
+                if (p.defense) ranksOnTable.add(p.defense.rank);
             }
+            return ranksOnTable.has(card.rank);
+        }
+
+        function isLegalDefense(attackCard, defenseCard) {
+            if (defenseCard.suit === attackCard.suit) {
+                return defenseCard.weight > attackCard.weight;
+            }
+            return defenseCard.suit === MATCH.trumpSuit && attackCard.suit !== MATCH.trumpSuit;
+        }
+
+        function canCardPlayLegally(card) {
+            if (!MATCH || MATCH.gameOver) return false;
+            if (MATCH.attacker === 'player') {
+                if (MATCH.tablePairs.length >= 6 || MATCH.oppHand.length === 0) return false;
+                return isLegalAttack(card);
+            } else {
+                const undefended = MATCH.tablePairs.find(p => !p.defense);
+                if (!undefended) return false;
+                return isLegalDefense(undefended.attack, card);
+            }
+        }
+
+        function canPlayerTransferWithCard(card) {
+            if (!MATCH || MATCH.room.mode !== 'perevodnoy') return false;
+            if (MATCH.attacker !== 'opp') return false;
+            if (MATCH.tablePairs.length === 0) return false;
+            if (MATCH.tablePairs.some(p => p.defense !== null)) return false;
+            if (MATCH.playerHand.length <= 1) return false;
+            const baseRank = MATCH.tablePairs[0].attack.rank;
+            return card.rank === baseRank;
         }
 
         function renderTableState() {
             if (!MATCH) return;
-            const backCss = SKINS_CATALOG.find(s => s.id === STATE.equipped.back)?.css || 'back-classic';
             const faceCss = SKINS_CATALOG.find(s => s.id === STATE.equipped.face)?.css || 'face-classic';
+            const backCss = SKINS_CATALOG.find(s => s.id === STATE.equipped.back)?.css || 'back-classic';
 
-            // 1. Колода и козырь
-            const deckCount = MATCH.deck.length;
             const deckBox = document.getElementById('deck-pile-box');
             const trumpBox = document.getElementById('trump-card-box');
-            const emptyWatermark = document.getElementById('empty-trump-watermark');
+            const emptyMark = document.getElementById('empty-trump-watermark');
+            const trumpPillText = document.getElementById('trump-pill-text');
+            const col = MATCH.trumpCard.isRed ? 'text-rose-500' : 'text-white';
+            const cardCol = MATCH.trumpCard.isRed ? 'text-rose-600' : '';
 
-            const trumpColor = MATCH.trumpCard.isRed ? 'text-rose-500' : (faceCss === 'face-dark' ? 'text-white' : 'text-slate-900');
-            const pillColor = MATCH.trumpCard.isRed ? 'text-rose-400' : 'text-sky-300';
-            const pillTextEl = document.getElementById('trump-pill-text');
-            if (pillTextEl) {
-                pillTextEl.className = `${pillColor} font-black`;
-                pillTextEl.textContent = `${MATCH.trumpCard.label}${MATCH.trumpCard.symbol}`;
-            }
+            trumpPillText.className = col;
+            trumpPillText.textContent = `${MATCH.trumpCard.rank}${MATCH.trumpCard.symbol}`;
+            emptyMark.textContent = MATCH.trumpCard.symbol;
+            emptyMark.className = `absolute left-3 top-4 w-14 h-16 rounded-xl border-2 border-dashed border-white/25 flex items-center justify-center text-3xl opacity-60 ${MATCH.trumpCard.isRed ? 'text-rose-400' : 'text-white'}`;
 
-            if (deckCount > 0) {
-                emptyWatermark.classList.add('hidden');
-                trumpBox.classList.remove('hidden');
-                trumpBox.className = `absolute left-7 top-6 w-14 h-20 rounded-lg shadow-lg flex flex-col justify-between p-1.5 -rotate-90 z-10 ${faceCss} ${trumpColor}`;
-                document.getElementById('trump-rank-label').textContent = MATCH.trumpCard.label;
+            if (MATCH.deck.length > 0) {
+                trumpBox.className = `absolute left-7 top-6 w-14 h-20 rounded-lg ${faceCss} shadow-lg flex flex-col justify-between p-1.5 -rotate-90 z-10`;
+                document.getElementById('trump-rank-label').className = `text-xs font-black leading-none ${cardCol}`;
+                document.getElementById('trump-rank-label').textContent = MATCH.trumpCard.rank;
+                document.getElementById('trump-suit-mini').className = `text-xs leading-none ${cardCol}`;
                 document.getElementById('trump-suit-mini').textContent = MATCH.trumpCard.symbol;
+                document.getElementById('trump-suit-big').className = `text-2xl self-center leading-none ${cardCol}`;
                 document.getElementById('trump-suit-big').textContent = MATCH.trumpCard.symbol;
 
-                if (deckCount > 1) {
+                if (MATCH.deck.length > 1) {
+                    deckBox.className = `relative left-0 top-1 w-14 h-20 rounded-lg ${backCss} shadow-2xl flex items-center justify-center z-20`;
+                    document.getElementById('deck-counter-badge').textContent = MATCH.deck.length;
                     deckBox.classList.remove('hidden');
-                    deckBox.className = `relative left-0 top-1 w-14 h-20 rounded-lg shadow-2xl flex items-center justify-center z-20 ${backCss}`;
-                    document.getElementById('deck-counter-badge').textContent = deckCount;
                 } else {
                     deckBox.classList.add('hidden');
                 }
+                emptyMark.classList.add('hidden');
             } else {
                 deckBox.classList.add('hidden');
                 trumpBox.classList.add('hidden');
-                emptyWatermark.classList.remove('hidden');
-                emptyWatermark.textContent = MATCH.trumpCard.symbol;
-                emptyWatermark.className = `absolute left-3 top-4 w-14 h-16 rounded-xl border-2 border-dashed border-white/25 flex items-center justify-center text-3xl opacity-60 ${MATCH.trumpCard.isRed ? 'text-rose-400' : 'text-white'}`;
+                emptyMark.classList.remove('hidden');
             }
 
-            // 2. Веер карт соперника
             const oppFan = document.getElementById('opp-hand-fan');
             const oppCount = MATCH.oppHand.length;
-            document.getElementById('opp-cards-counter').textContent = `${oppCount} карт`;
-            const oppOverlap = oppCount > 8 ? -20 : -12;
+            const oppStep = oppCount > 8 ? -18 : -12;
             oppFan.innerHTML = MATCH.oppHand.map((_, idx) => {
                 const deg = (idx - (oppCount - 1) / 2) * 4;
-                return `<div style="margin-left:${idx === 0 ? 0 : oppOverlap}px; transform: rotate(${deg}deg)" class="w-8 h-12 rounded-md ${backCss} shadow-md"></div>`;
+                return `<div style="margin-left:${idx === 0 ? 0 : oppStep}px; transform: rotate(${deg}deg)" class="w-8 h-11 rounded-md ${backCss} shadow-md"></div>`;
             }).join('');
+            document.getElementById('opp-cards-counter').textContent = `${oppCount} карт`;
 
-            // 3. Поле боя на столе
-            const battleGrid = document.getElementById('battle-grid');
-            battleGrid.innerHTML = MATCH.table.map((pair) => {
-                const aCol = pair.attack.isRed ? 'text-rose-500' : (faceCss === 'face-dark' ? 'text-white' : 'text-slate-900');
-                let defHTML = '';
-                if (pair.defend) {
-                    const dCol = pair.defend.isRed ? 'text-rose-500' : (faceCss === 'face-dark' ? 'text-white' : 'text-slate-900');
-                    const cheatRing = pair.isIllegalCheat ? 'ring-2 ring-rose-400/70' : '';
-                    defHTML = `
-                        <div class="absolute top-3 left-3 w-14 h-20 rounded-lg ${faceCss} ${dCol} ${cheatRing} shadow-xl p-1 flex flex-col justify-between rotate-6 z-10">
-                            <div class="text-[11px] font-black leading-none">${pair.defend.label}${pair.defend.symbol}</div>
-                            <div class="text-xl self-center leading-none">${pair.defend.symbol}</div>
-                            <div class="text-[9px] font-bold self-end rotate-180 leading-none">${pair.defend.label}</div>
-                        </div>`;
-                }
+            const grid = document.getElementById('battle-grid');
+            grid.innerHTML = MATCH.tablePairs.map((pair, idx) => {
+                const aCol = pair.attack.isRed ? 'text-rose-600' : '';
+                const dCard = pair.defense;
+                const dCol = dCard && dCard.isRed ? 'text-rose-600' : '';
                 return `
-                    <div class="relative w-16 h-24">
-                        <div class="w-14 h-20 rounded-lg ${faceCss} ${aCol} shadow-md p-1 flex flex-col justify-between -rotate-3">
-                            <div class="text-[11px] font-black leading-none">${pair.attack.label}${pair.attack.symbol}</div>
-                            <div class="text-xl self-center leading-none">${pair.attack.symbol}</div>
-                            <div class="text-[9px] font-bold self-end rotate-180 leading-none">${pair.attack.label}</div>
+                    <div id="table-slot-${idx}" class="relative w-16 h-24 flex items-center justify-center">
+                        <div class="w-14 h-20 rounded-lg ${faceCss} shadow-md flex flex-col justify-between p-1.5 -rotate-3">
+                            <div class="text-[11px] font-black leading-none ${aCol}">${pair.attack.rank}${pair.attack.symbol}</div>
+                            <div class="text-xl self-center leading-none ${aCol}">${pair.attack.symbol}</div>
+                            <div class="text-[9px] font-bold self-end rotate-180 leading-none ${aCol}">${pair.attack.rank}</div>
                         </div>
-                        ${defHTML}
-                    </div>`;
+                        ${dCard ? `
+                        <div class="absolute top-2 left-2.5 w-14 h-20 rounded-lg ${faceCss} shadow-xl flex flex-col justify-between p-1.5 rotate-6 border-2 border-emerald-400/50">
+                            <div class="text-[11px] font-black leading-none ${dCol}">${dCard.rank}${dCard.symbol}</div>
+                            <div class="text-xl self-center leading-none ${dCol}">${dCard.symbol}</div>
+                            <div class="text-[9px] font-bold self-end rotate-180 leading-none ${dCol}">${dCard.rank}</div>
+                        </div>` : ''}
+                    </div>
+                `;
             }).join('');
 
-            // 4. Кнопки и баннер хода
+            const catchBtn = document.getElementById('btn-catch-cheater');
+            catchBtn.classList.toggle('hidden', MATCH.unverifiedOppCheatSlot === null);
+
             const banner = document.getElementById('turn-banner');
             const btnBito = document.getElementById('btn-bito');
             const btnTake = document.getElementById('btn-take');
             const btnTransfer = document.getElementById('btn-transfer');
-            const btnCatch = document.getElementById('btn-catch-cheater');
 
             btnBito.classList.add('hidden');
             btnTake.classList.add('hidden');
             btnTransfer.classList.add('hidden');
-            btnCatch.classList.toggle('hidden', MATCH.activeOppCheatIndex === null);
 
-            document.getElementById('table-cheat-indicator').textContent = MATCH.room.cheating
-                ? (MATCH.playerCanCheat ? '🎭 Шулер включен' : '🚫 Шулерство раскрыто')
-                : '🛡️ Честная игра';
-
-            const uncovered = MATCH.table.find(p => !p.defend);
-
-            if (MATCH.turn === 'player') {
-                if (MATCH.defenderTaking) {
+            if (MATCH.attacker === 'player') {
+                if (MATCH.tablePairs.length === 0) {
+                    banner.textContent = 'Ваш ход • Атакуйте';
+                    banner.className = 'px-3.5 py-1 rounded-full bg-slate-950/75 border border-emerald-400/40 text-xs font-extrabold text-emerald-300 shadow';
+                } else if (MATCH.defenderTakes) {
                     banner.textContent = 'Соперник берет • Подкиньте еще или нажмите Пас';
-                    banner.className = 'px-3.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-xs font-extrabold text-amber-200 shadow';
-                    btnBito.textContent = '✅ Пас (пусть берет)';
-                    btnBito.classList.remove('hidden');
-                } else if (MATCH.table.length === 0) {
-                    banner.textContent = 'Ваш ход • Выберите карту для атаки';
-                    banner.className = 'px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-xs font-extrabold text-emerald-200 shadow';
-                } else if (!uncovered) {
-                    banner.textContent = 'Соперник отбился • Подкиньте или нажмите Бито';
-                    banner.className = 'px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-xs font-extrabold text-emerald-200 shadow';
-                    btnBito.textContent = '✅ Бито';
+                    btnBito.textContent = '✅ Пас (Отдать карты)';
                     btnBito.classList.remove('hidden');
                 } else {
-                    banner.textContent = 'Ожидание ответа соперника...';
+                    const allBeaten = MATCH.tablePairs.every(p => p.defense !== null);
+                    if (allBeaten) {
+                        banner.textContent = 'Отбито • Подкиньте еще или нажмите Бито';
+                        btnBito.textContent = '✅ Бито';
+                        btnBito.classList.remove('hidden');
+                    } else {
+                        banner.textContent = 'Ожидание защиты соперника...';
+                    }
                 }
             } else {
-                if (uncovered && !MATCH.defenderTaking) {
+                const hasUndefended = MATCH.tablePairs.some(p => !p.defense);
+                if (hasUndefended) {
                     banner.textContent = 'Защита • Отбейтесь картой или возьмите';
-                    banner.className = 'px-3.5 py-1 rounded-full bg-amber-500/25 border border-amber-400/40 text-xs font-extrabold text-amber-200 shadow';
+                    banner.className = 'px-3.5 py-1 rounded-full bg-slate-950/75 border border-amber-400/40 text-xs font-extrabold text-amber-300 shadow';
                     btnTake.classList.remove('hidden');
-
-                    if (
-                        MATCH.room.mode === 'perevodnoy' &&
-                        MATCH.table.every(p => !p.defend) &&
-                        MATCH.playerHand.some(c => c.value === uncovered.attack.value) &&
-                        MATCH.oppHand.length >= MATCH.table.length + 1
-                    ) {
+                    if (MATCH.playerHand.some(c => canPlayerTransferWithCard(c))) {
                         btnTransfer.classList.remove('hidden');
                     }
                 } else {
-                    banner.textContent = 'Ход соперника...';
+                    banner.textContent = 'Ожидание хода соперника...';
                 }
             }
 
-            // 5. Веер карт игрока внахлест (без скролла)
-            sortPlayerCards(MATCH.playerHand, MATCH.trumpSuit);
-            const fanContainer = document.getElementById('player-hand-fan');
-            const total = MATCH.playerHand.length;
-            const maxSpreadWidth = Math.min(window.innerWidth - 36, 360);
-            const cardW = 68;
-            const stepX = total <= 1 ? 0 : Math.min(40, (maxSpreadWidth - cardW) / (total - 1));
+            renderPlayerHandFan();
+        }
 
-            fanContainer.innerHTML = MATCH.playerHand.map((card, i) => {
-                const offsetFromCenter = i - (total - 1) / 2;
-                const xPos = offsetFromCenter * stepX;
-                const angle = offsetFromCenter * (total > 10 ? 2.4 : 4.2);
-                const archY = Math.abs(offsetFromCenter) * (total > 10 ? 1.8 : 3.2);
+        function renderPlayerHandFan() {
+            const container = document.getElementById('player-hand-fan');
+            const cards = MATCH.playerHand;
+            const count = cards.length;
+            if (count === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            const faceCss = SKINS_CATALOG.find(s => s.id === STATE.equipped.face)?.css || 'face-classic';
+            const containerWidth = container.clientWidth || 350;
+            const cardWidth = 68;
+            const maxSpread = Math.min(containerWidth - 20, count * 46);
+            const step = count > 1 ? Math.min(44, (maxSpread - cardWidth) / (count - 1)) : 0;
 
-                const legal = isCardLegalForPlayer(card);
-                const canPlayByCheat = !legal && MATCH.room.cheating && MATCH.playerCanCheat &&
-                    ((MATCH.turn === 'player' && MATCH.table.length < 6 && MATCH.oppHand.length > 0) ||
-                     (MATCH.turn === 'opp' && uncovered));
+            container.innerHTML = cards.map((card, i) => {
+                const offsetFromCenter = i - (count - 1) / 2;
+                const xPos = offsetFromCenter * step;
+                const angle = offsetFromCenter * (count > 10 ? 2.1 : 3.4);
+                const yArch = Math.abs(offsetFromCenter) * (count > 10 ? 1.4 : 2.3);
+
+                const legal = canCardPlayLegally(card) || canPlayerTransferWithCard(card);
+                const canCheat = MATCH.cheatingAllowed && !MATCH.playerCaughtCheating && !legal && (
+                    (MATCH.attacker === 'player' && MATCH.tablePairs.length > 0 && MATCH.tablePairs.length < 6) ||
+                    (MATCH.attacker === 'opp' && MATCH.tablePairs.some(p => !p.defense))
+                );
 
                 const liftY = legal ? -10 : 0;
-                const col = card.isRed ? 'text-rose-500' : (faceCss === 'face-dark' ? 'text-white' : 'text-slate-900');
-                const borderHighlight = legal ? 'playable-card' : (canPlayByCheat ? 'cheat-card' : 'opacity-90');
+                const extraClass = legal ? 'playable-card' : (canCheat ? 'cheat-card' : '');
+                const col = card.isRed ? 'text-rose-600' : '';
 
                 return `
-                    <div id="pcard-${card.uid}"
-                         onclick="onPlayerCardClick('${card.uid}', event)"
-                         style="transform: translate3d(${xPos}px, ${archY + liftY}px, 0) rotate(${angle}deg); z-index: ${i + 10};"
-                         class="hand-fan-card ${faceCss} ${col} ${borderHighlight} p-1.5 flex flex-col justify-between">
+                    <div id="hand-card-${card.id}"
+                         onclick="onPlayerCardClick('${card.id}')"
+                         style="transform: translate3d(${xPos}px, ${yArch + liftY}px, 0) rotate(${angle}deg); z-index: ${10 + i};"
+                         class="hand-fan-card ${faceCss} ${extraClass} flex flex-col justify-between p-1.5">
                         <div class="flex items-center justify-between leading-none">
-                            <span class="text-xs font-black">${card.label}</span>
-                            <span class="text-xs">${card.symbol}</span>
+                            <span class="text-xs font-black ${col}">${card.rank}</span>
+                            <span class="text-xs ${col}">${card.symbol}</span>
                         </div>
-                        <div class="text-2xl self-center leading-none">${card.symbol}</div>
+                        <div class="text-2xl self-center leading-none ${col}">${card.symbol}</div>
                         <div class="flex items-center justify-between leading-none rotate-180">
-                            <span class="text-[10px] font-bold">${card.label}</span>
-                            <span class="text-[10px]">${card.symbol}</span>
+                            <span class="text-[10px] font-bold ${col}">${card.rank}</span>
+                            <span class="text-[10px] ${col}">${card.symbol}</span>
                         </div>
-                        ${card.suit === MATCH.trumpSuit ? '<span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400"></span>' : ''}
                     </div>
                 `;
             }).join('');
         }
 
-        function onPlayerCardClick(cardUid, evt) {
-            if (!MATCH || MATCH.finished) return;
-            const idx = MATCH.playerHand.findIndex(c => c.uid === cardUid);
+        function onPlayerCardClick(cardId) {
+            if (!MATCH || MATCH.gameOver) return;
+            const idx = MATCH.playerHand.findIndex(c => c.id === cardId);
             if (idx === -1) return;
             const card = MATCH.playerHand[idx];
-            const legal = isCardLegalForPlayer(card);
-            const uncovered = MATCH.table.find(p => !p.defend);
 
-            let usedCheat = false;
-            if (!legal) {
-                if (MATCH.room.cheating && MATCH.playerCanCheat) {
-                    usedCheat = true;
-                } else {
-                    showToast(MATCH.room.cheating && !MATCH.playerCanCheat
-                        ? 'Вас уже поймали на шулерстве — теперь ходите только по правилам!'
-                        : 'Этой картой сейчас ходить нельзя по правилам');
+            // Если этот игрок — Гость в живом P2P-матче, отправляем ход Хосту
+            if (MATCH.isP2PGuest && isLiveP2PMatch()) {
+                const legal = canCardPlayLegally(card);
+                const canCheat = MATCH.cheatingAllowed && !MATCH.playerCaughtCheating;
+                if (!legal && !canCheat) {
+                    showToast('Этой картой сейчас ходить нельзя по правилам!');
                     return;
                 }
+                P2P.conn.send({ type: 'GUEST_ACTION', action: 'PLAY_CARD', cardId: card.id });
+                return;
             }
 
-            const cardEl = evt?.currentTarget || document.getElementById(`pcard-${cardUid}`);
+            const cardEl = document.getElementById(`hand-card-${cardId}`);
             const fromRect = cardEl ? cardEl.getBoundingClientRect() : null;
-            const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
+            const gridRect = document.getElementById('battle-grid').getBoundingClientRect();
 
-            if (MATCH.turn === 'player') {
-                if (MATCH.table.length >= 6 || MATCH.oppHand.length === 0) return;
-                MATCH.playerHand.splice(idx, 1);
-                MATCH.lastPlayerAttackCard = card;
-                MATCH.table.push({ attack: card, defend: null, isIllegalCheat: usedCheat });
-
-                if (fromRect) {
-                    animateCardFlight(fromRect, { left: battleRect.left + 40 + (MATCH.table.length - 1) * 55, top: battleRect.top + 20 }, card, true, -4);
+            if (MATCH.attacker === 'player') {
+                if (MATCH.tablePairs.length >= 6 || MATCH.oppHand.length === 0) {
+                    showToast('Больше карт подкинуть нельзя');
+                    return;
+                }
+                const legal = isLegalAttack(card);
+                if (!legal && (!MATCH.cheatingAllowed || MATCH.playerCaughtCheating)) {
+                    showToast('По правилам можно подкидывать только карты номиналов со стола!');
+                    return;
                 }
 
-                // Проверка: заметит ли бот шулерство игрока (шанс 55%)
-                if (usedCheat) {
-                    if (Math.random() < 0.55) {
-                        setTimeout(() => {
-                            if (!MATCH || MATCH.finished) return;
-                            const popped = MATCH.table.pop();
-                            if (popped) MATCH.playerHand.push(popped.attack);
-                            MATCH.playerCanCheat = false;
-                            sendTableEmoji('🚨', true);
-                            showToast('🚨 Соперник поймал вас на шулерстве! Карта возвращена.');
-                            renderTableState();
-                        }, 480);
+                MATCH.playerHand.splice(idx, 1);
+                MATCH.lastPlayerCardRank = card.rank;
+
+                if (!legal && MATCH.cheatingAllowed) {
+                    if (!MATCH.isP2PHost && Math.random() < 0.55) {
+                        MATCH.playerHand.push(card);
+                        MATCH.playerCaughtCheating = true;
+                        sortPlayerHand();
+                        showToast('🚨 Соперник поймал вас на шулерстве! Карта возвращена.');
                         renderTableState();
                         return;
-                    } else {
-                        MATCH.unpunishedPlayerCheat = true;
+                    } else if (!MATCH.isP2PHost) {
                         unlockAchievement('sleight_hand');
+                        showToast('🎭 Ловкость рук! Вы незаметно подкинули карту.');
                     }
                 }
 
-                renderTableState();
-                if (checkMatchWinner()) return;
-
-                if (MATCH.defenderTaking) {
-                    return;
+                const newSlotIndex = MATCH.tablePairs.length;
+                MATCH.tablePairs.push({ attack: card, defense: null });
+                if (!legal && MATCH.isP2PHost) {
+                    MATCH.unverifiedPlayerCheatSlot = { type: 'attack', pairIndex: newSlotIndex, card };
                 }
-                setTimeout(() => botDefendTurn(), 520);
+
+                animateCardFlight(
+                    fromRect,
+                    { left: gridRect.left + (newSlotIndex % 3) * 85 + 15, top: gridRect.top + Math.floor(newSlotIndex / 3) * 85 + 10 },
+                    card,
+                    true,
+                    () => {
+                        renderTableState();
+                        if (checkInstantVictory()) {
+                            sendMultiplayerStateToPeer();
+                            return;
+                        }
+                        if (MATCH.isP2PHost) {
+                            sendMultiplayerStateToPeer();
+                        } else if (!MATCH.defenderTakes) {
+                            setTimeout(() => botRespondToAttack(newSlotIndex), 420);
+                        }
+                    }
+                );
             } else {
-                // Игрок защищается
-                if (!uncovered || MATCH.defenderTaking) return;
+                const targetIndex = MATCH.tablePairs.findIndex(p => !p.defense);
+                if (targetIndex === -1) return;
+                const attackCard = MATCH.tablePairs[targetIndex].attack;
+                const legal = isLegalDefense(attackCard, card);
 
-                // Если это перевод
-                if (
-                    !usedCheat &&
-                    MATCH.room.mode === 'perevodnoy' &&
-                    MATCH.table.every(p => !p.defend) &&
-                    card.value === uncovered.attack.value &&
-                    !canCardBeatStrict(uncovered.attack, card, MATCH.trumpSuit)
-                ) {
-                    executeTransferWithCard(idx, fromRect);
+                if (!legal && (!MATCH.cheatingAllowed || MATCH.playerCaughtCheating)) {
+                    showToast('Эта карта не бьет атакующую карту!');
                     return;
                 }
 
                 MATCH.playerHand.splice(idx, 1);
-                uncovered.defend = card;
-                uncovered.isIllegalCheat = usedCheat;
+                MATCH.lastPlayerCardRank = card.rank;
 
-                if (fromRect) {
-                    animateCardFlight(fromRect, { left: battleRect.left + 60, top: battleRect.top + 25 }, card, true, 6);
-                }
-
-                if (usedCheat) {
-                    if (Math.random() < 0.55) {
-                        setTimeout(() => {
-                            if (!MATCH || MATCH.finished) return;
-                            const returnedCard = uncovered.defend;
-                            uncovered.defend = null;
-                            uncovered.isIllegalCheat = false;
-                            if (returnedCard) MATCH.playerHand.push(returnedCard);
-                            MATCH.playerCanCheat = false;
-                            sendTableEmoji('🚨', true);
-                            showToast('🚨 Соперник заметил шулерскую защиту! Отбейтесь честно.');
-                            renderTableState();
-                        }, 480);
+                if (!legal && MATCH.cheatingAllowed) {
+                    if (!MATCH.isP2PHost && Math.random() < 0.55) {
+                        MATCH.playerHand.push(card);
+                        MATCH.playerCaughtCheating = true;
+                        sortPlayerHand();
+                        showToast('🚨 Соперник заметил шулерскую защиту! Больше шулерить нельзя.');
                         renderTableState();
                         return;
-                    } else {
-                        MATCH.unpunishedPlayerCheat = true;
+                    } else if (!MATCH.isP2PHost) {
                         unlockAchievement('sleight_hand');
+                        showToast('🎭 Шулерская защита прошла незамеченной!');
                     }
                 }
 
-                renderTableState();
-                if (checkMatchWinner()) return;
-                setTimeout(() => botThrowInOrBito(), 560);
+                MATCH.tablePairs[targetIndex].defense = card;
+                if (!legal && MATCH.isP2PHost) {
+                    MATCH.unverifiedPlayerCheatSlot = { type: 'defense', pairIndex: targetIndex, card };
+                }
+
+                const slotEl = document.getElementById(`table-slot-${targetIndex}`);
+                const toRect = slotEl ? slotEl.getBoundingClientRect() : gridRect;
+
+                animateCardFlight(fromRect, toRect, card, true, () => {
+                    renderTableState();
+                    if (checkInstantVictory()) {
+                        sendMultiplayerStateToPeer();
+                        return;
+                    }
+                    if (MATCH.isP2PHost) {
+                        sendMultiplayerStateToPeer();
+                    } else {
+                        setTimeout(() => botContinueAttackOrBito(), 480);
+                    }
+                });
             }
         }
 
         function handleTransferAction() {
-            if (!MATCH || MATCH.turn !== 'opp') return;
-            const uncovered = MATCH.table.find(p => !p.defend);
-            if (!uncovered) return;
-            const idx = MATCH.playerHand.findIndex(c => c.value === uncovered.attack.value);
+            if (!MATCH || MATCH.gameOver) return;
+            const idx = MATCH.playerHand.findIndex(c => canPlayerTransferWithCard(c));
             if (idx === -1) return;
-            const el = document.getElementById(`pcard-${MATCH.playerHand[idx].uid}`);
-            executeTransferWithCard(idx, el ? el.getBoundingClientRect() : null);
-        }
-
-        function executeTransferWithCard(handIdx, fromRect) {
-            const card = MATCH.playerHand.splice(handIdx, 1)[0];
-            const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
-            if (fromRect) {
-                animateCardFlight(fromRect, { left: battleRect.left + 90, top: battleRect.top + 20 }, card, true, 0);
-            }
-            MATCH.table.push({ attack: card, defend: null });
-            MATCH.turn = 'player';
-            showToast('🔄 Вы перевели ход на соперника!');
+            const [card] = MATCH.playerHand.splice(idx, 1);
+            MATCH.tablePairs.push({ attack: card, defense: null });
+            MATCH.attacker = 'player';
+            showToast(`🔄 Вы перевели ${card.rank}${card.symbol} на соперника!`);
             renderTableState();
-            setTimeout(() => botDefendTurn(), 580);
+            if (MATCH.isP2PHost) {
+                sendMultiplayerStateToPeer();
+            } else {
+                setTimeout(() => botDefendAllAfterTransfer(), 500);
+            }
         }
 
-        function botDefendTurn() {
-            if (!MATCH || MATCH.finished || MATCH.turn !== 'player') return;
-            const uncoveredIndex = MATCH.table.findIndex(p => !p.defend);
-            if (uncoveredIndex === -1) return;
-            const uncovered = MATCH.table[uncoveredIndex];
+        function botRespondToAttack(pairIndex) {
+            if (!MATCH || MATCH.gameOver || MATCH.isP2PHost) return;
+            const pair = MATCH.tablePairs[pairIndex];
+            if (!pair || pair.defense) return;
 
-            sortPlayerCards(MATCH.oppHand, MATCH.trumpSuit);
-            let chosenIdx = MATCH.oppHand.findIndex(c => canCardBeatStrict(uncovered.attack, c, MATCH.trumpSuit));
-            let isBotCheating = false;
-
-            // Если у бота нет подходящей карты (или есть только высокий козырь), а режим «С шулером» включен — бот может схитрить!
-            if (
-                MATCH.room.cheating &&
-                MATCH.oppCanCheat &&
-                MATCH.oppHand.length > 0 &&
-                (chosenIdx === -1 || (MATCH.oppHand[chosenIdx].suit === MATCH.trumpSuit && Math.random() < 0.45))
-            ) {
-                const fakeIdx = MATCH.oppHand.findIndex(c => !canCardBeatStrict(uncovered.attack, c, MATCH.trumpSuit));
-                if (fakeIdx !== -1 && Math.random() < 0.65) {
-                    chosenIdx = fakeIdx;
-                    isBotCheating = true;
+            if (MATCH.room.mode === 'perevodnoy' && MATCH.tablePairs.every(p => !p.defense) && MATCH.playerHand.length >= MATCH.tablePairs.length + 1) {
+                const trIdx = MATCH.oppHand.findIndex(c => c.rank === pair.attack.rank);
+                if (trIdx !== -1) {
+                    const [trCard] = MATCH.oppHand.splice(trIdx, 1);
+                    MATCH.tablePairs.push({ attack: trCard, defense: null });
+                    MATCH.attacker = 'opp';
+                    showToast(`🔄 Соперник перевел картой ${trCard.rank}${trCard.symbol}! Защищайтесь!`);
+                    renderTableState();
+                    return;
                 }
             }
 
-            if (chosenIdx !== -1) {
-                const defCard = MATCH.oppHand.splice(chosenIdx, 1)[0];
+            let defIdx = -1;
+            let bestWeight = 999;
+            MATCH.oppHand.forEach((c, idx) => {
+                if (isLegalDefense(pair.attack, c)) {
+                    const score = (c.suit === MATCH.trumpSuit ? 100 : 0) + c.weight;
+                    if (score < bestWeight) {
+                        bestWeight = score;
+                        defIdx = idx;
+                    }
+                }
+            });
+
+            let cheated = false;
+            if (defIdx === -1 && MATCH.cheatingAllowed && !MATCH.oppCaughtCheating && MATCH.oppHand.length > 0 && Math.random() < 0.45) {
+                defIdx = 0;
+                cheated = true;
+            }
+
+            if (defIdx !== -1) {
+                const [defCard] = MATCH.oppHand.splice(defIdx, 1);
+                pair.defense = defCard;
+                pair.cheatedByOpp = cheated;
+                if (cheated) {
+                    MATCH.unverifiedOppCheatSlot = { type: 'defense', pairIndex, card: defCard };
+                }
+
                 const oppRect = document.getElementById('opp-hand-fan').getBoundingClientRect();
-                const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
-                animateCardFlight(oppRect, { left: battleRect.left + 60, top: battleRect.top + 24 }, defCard, true, 8);
+                const slotEl = document.getElementById(`table-slot-${pairIndex}`);
+                const toRect = slotEl ? slotEl.getBoundingClientRect() : oppRect;
 
-                uncovered.defend = defCard;
-                uncovered.isIllegalCheat = isBotCheating;
-                MATCH.activeOppCheatIndex = isBotCheating ? uncoveredIndex : null;
-
-                renderTableState();
-                checkMatchWinner();
+                animateCardFlight(oppRect, toRect, defCard, true, () => {
+                    renderTableState();
+                    checkInstantVictory();
+                });
             } else {
-                MATCH.defenderTaking = true;
-                sendTableEmoji('😤', true);
-                showToast('Соперник забирает карты! Можете подкинуть еще или нажать Пас.');
+                MATCH.defenderTakes = true;
+                showToast('📥 Соперник берет карты! Можете подкинуть или нажать Пас.');
                 renderTableState();
+            }
+        }
+
+        function botDefendAllAfterTransfer() {
+            if (!MATCH || MATCH.gameOver || MATCH.isP2PHost) return;
+            for (let i = 0; i < MATCH.tablePairs.length; i++) {
+                if (!MATCH.tablePairs[i].defense) {
+                    botRespondToAttack(i);
+                    if (MATCH.defenderTakes) break;
+                }
             }
         }
 
         function catchOpponentCheating() {
-            if (!MATCH || MATCH.activeOppCheatIndex === null) return;
-            const pair = MATCH.table[MATCH.activeOppCheatIndex];
-            if (pair && pair.defend && pair.isIllegalCheat) {
-                const returned = pair.defend;
-                pair.defend = null;
-                pair.isIllegalCheat = false;
-                MATCH.oppHand.push(returned);
-                MATCH.oppCanCheat = false;
-                MATCH.activeOppCheatIndex = null;
-                unlockAchievement('catch_cheat');
-                sendTableEmoji('😱', true);
-                showToast('🚨 Вы поймали соперника на шулерстве! Ему запрещено шулерить до конца игры.');
-                renderTableState();
-                setTimeout(() => botDefendTurn(), 550);
+            if (!MATCH || !MATCH.unverifiedOppCheatSlot) return;
+            if (MATCH.isP2PGuest && isLiveP2PMatch()) {
+                P2P.conn.send({ type: 'GUEST_ACTION', action: 'CATCH_CHEAT' });
+                return;
+            }
+            const info = MATCH.unverifiedOppCheatSlot;
+            const pair = MATCH.tablePairs[info.pairIndex];
+            if (pair) {
+                if (info.type === 'defense' && pair.defense) {
+                    MATCH.oppHand.push(pair.defense);
+                    pair.defense = null;
+                } else if (info.type === 'attack') {
+                    MATCH.oppHand.push(pair.attack);
+                    MATCH.tablePairs.splice(info.pairIndex, 1);
+                }
+            }
+            MATCH.oppCaughtCheating = true;
+            MATCH.unverifiedOppCheatSlot = null;
+            unlockAchievement('catch_cheat');
+            showToast('🚨 Вы поймали соперника на шулерстве! Карта возвращена ему в руку.');
+            renderTableState();
+            if (MATCH.isP2PHost) {
+                sendMultiplayerStateToPeer();
+            } else if (info.type === 'defense') {
+                setTimeout(() => botRespondToAttack(info.pairIndex), 450);
             }
         }
 
         function handleBitoAction() {
-            if (!MATCH || MATCH.finished || MATCH.turn !== 'player') return;
-            MATCH.activeOppCheatIndex = null;
-
-            const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
-            const discardRect = document.getElementById('discard-anchor').getBoundingClientRect();
-            const oppRect = document.getElementById('opp-hand-fan').getBoundingClientRect();
-
-            if (MATCH.defenderTaking) {
-                for (const pair of MATCH.table) {
-                    MATCH.oppHand.push(pair.attack);
-                    if (pair.defend) MATCH.oppHand.push(pair.defend);
-                }
-                animateCardFlight(battleRect, oppRect, null, false, 12);
-                MATCH.table = [];
-                MATCH.defenderTaking = false;
-                refillBothHands('player');
-                MATCH.turn = 'player';
-                renderTableState();
-                checkMatchWinner();
+            if (!MATCH || MATCH.gameOver) return;
+            if (MATCH.isP2PGuest && isLiveP2PMatch()) {
+                P2P.conn.send({ type: 'GUEST_ACTION', action: 'BITO' });
+                return;
+            }
+            if (MATCH.defenderTakes) {
+                finishBoutTake('opp');
             } else {
-                animateCardFlight(battleRect, discardRect, null, false, 20);
-                MATCH.table = [];
-                refillBothHands('player');
-                MATCH.turn = 'opp';
-                renderTableState();
-                if (!checkMatchWinner()) {
-                    setTimeout(() => botStartAttack(), 600);
-                }
+                finishBoutBito();
             }
         }
 
         function handleTakeAction() {
-            if (!MATCH || MATCH.finished || MATCH.turn !== 'opp') return;
-            MATCH.playerTookAny = true;
-            MATCH.activeOppCheatIndex = null;
-            const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
-            const playerRect = document.getElementById('player-hand-fan').getBoundingClientRect();
-
-            for (const pair of MATCH.table) {
-                MATCH.playerHand.push(pair.attack);
-                if (pair.defend) MATCH.playerHand.push(pair.defend);
+            if (!MATCH || MATCH.gameOver) return;
+            if (MATCH.isP2PGuest && isLiveP2PMatch()) {
+                P2P.conn.send({ type: 'GUEST_ACTION', action: 'TAKE' });
+                return;
             }
-            animateCardFlight(battleRect, { left: playerRect.left + 130, top: playerRect.top + 15 }, null, false, -8);
+            MATCH.playerEverTook = true;
+            finishBoutTake('player');
+        }
 
-            MATCH.table = [];
-            refillBothHands('opp');
-            MATCH.turn = 'opp';
-            renderTableState();
-            if (!checkMatchWinner()) {
-                setTimeout(() => botStartAttack(), 650);
+        function finishBoutBito() {
+            const gridRect = document.getElementById('battle-grid').getBoundingClientRect();
+            const discardRect = document.getElementById('discard-anchor').getBoundingClientRect();
+
+            animateCardFlight(gridRect, discardRect, null, false, () => {
+                MATCH.tablePairs = [];
+                MATCH.defenderTakes = false;
+                MATCH.unverifiedOppCheatSlot = null;
+                MATCH.unverifiedPlayerCheatSlot = null;
+                refillHandsFromDeck();
+                MATCH.attacker = MATCH.attacker === 'player' ? 'opp' : 'player';
+                renderTableState();
+                if (checkInstantVictory()) {
+                    sendMultiplayerStateToPeer();
+                    return;
+                }
+                if (MATCH.isP2PHost) {
+                    sendMultiplayerStateToPeer();
+                } else if (MATCH.attacker === 'opp') {
+                    setTimeout(() => botStartAttack(), 520);
+                }
+            });
+        }
+
+        function finishBoutTake(whoTakes) {
+            const allCards = [];
+            for (const p of MATCH.tablePairs) {
+                allCards.push(p.attack);
+                if (p.defense) allCards.push(p.defense);
             }
+            const gridRect = document.getElementById('battle-grid').getBoundingClientRect();
+            const targetRect = document.getElementById(whoTakes === 'player' ? 'player-hand-fan' : 'opp-hand-fan').getBoundingClientRect();
+
+            animateCardFlight(gridRect, targetRect, allCards[0], true, () => {
+                if (whoTakes === 'player') {
+                    MATCH.playerHand.push(...allCards);
+                    sortPlayerHand();
+                } else {
+                    MATCH.oppHand.push(...allCards);
+                }
+                MATCH.tablePairs = [];
+                MATCH.defenderTakes = false;
+                MATCH.unverifiedOppCheatSlot = null;
+                MATCH.unverifiedPlayerCheatSlot = null;
+                refillHandsFromDeck();
+                MATCH.attacker = whoTakes === 'player' ? 'opp' : 'player';
+                renderTableState();
+                if (checkInstantVictory()) {
+                    sendMultiplayerStateToPeer();
+                    return;
+                }
+                if (MATCH.isP2PHost) {
+                    sendMultiplayerStateToPeer();
+                } else if (MATCH.attacker === 'opp') {
+                    setTimeout(() => botStartAttack(), 520);
+                }
+            });
+        }
+
+        function refillHandsFromDeck() {
+            const order = MATCH.attacker === 'player' ? ['player', 'opp'] : ['opp', 'player'];
+            for (const side of order) {
+                const hand = side === 'player' ? MATCH.playerHand : MATCH.oppHand;
+                while (hand.length < 6 && MATCH.deck.length > 0) {
+                    hand.push(MATCH.deck.pop());
+                }
+            }
+            sortPlayerHand();
         }
 
         function botStartAttack() {
-            if (!MATCH || MATCH.finished || MATCH.turn !== 'opp') return;
-            if (MATCH.oppHand.length === 0 || MATCH.playerHand.length === 0) {
-                checkMatchWinner();
+            if (!MATCH || MATCH.gameOver || MATCH.attacker !== 'opp' || MATCH.isP2PHost) return;
+            if (MATCH.oppHand.length === 0) {
+                checkInstantVictory();
                 return;
             }
-            sortPlayerCards(MATCH.oppHand, MATCH.trumpSuit);
-            const card = MATCH.oppHand.shift();
+            MATCH.oppHand.sort((a, b) => {
+                const aT = a.suit === MATCH.trumpSuit ? 1 : 0;
+                const bT = b.suit === MATCH.trumpSuit ? 1 : 0;
+                if (aT !== bT) return aT - bT;
+                return a.weight - b.weight;
+            });
+
+            const [card] = MATCH.oppHand.splice(0, 1);
+            MATCH.tablePairs.push({ attack: card, defense: null });
+
             const oppRect = document.getElementById('opp-hand-fan').getBoundingClientRect();
-            const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
-            animateCardFlight(oppRect, { left: battleRect.left + 50, top: battleRect.top + 20 }, card, true, -5);
+            const gridRect = document.getElementById('battle-grid').getBoundingClientRect();
 
-            MATCH.table.push({ attack: card, defend: null });
-            renderTableState();
-            checkMatchWinner();
+            animateCardFlight(oppRect, gridRect, card, true, () => {
+                renderTableState();
+                checkInstantVictory();
+            });
         }
 
-        function botThrowInOrBito() {
-            if (!MATCH || MATCH.finished || MATCH.turn !== 'opp') return;
-            const ranks = getTableRanksSet();
-            sortPlayerCards(MATCH.oppHand, MATCH.trumpSuit);
-
-            const throwIdx = MATCH.oppHand.findIndex(c => ranks.has(c.value) && (c.suit !== MATCH.trumpSuit || MATCH.deck.length === 0));
-            if (throwIdx !== -1 && MATCH.table.length < 6 && MATCH.playerHand.length > 0) {
-                const card = MATCH.oppHand.splice(throwIdx, 1)[0];
-                const oppRect = document.getElementById('opp-hand-fan').getBoundingClientRect();
-                const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
-                animateCardFlight(oppRect, { left: battleRect.left + 85, top: battleRect.top + 20 }, card, true, 4);
-                MATCH.table.push({ attack: card, defend: null });
-                renderTableState();
-                checkMatchWinner();
-            } else {
-                const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
-                const discardRect = document.getElementById('discard-anchor').getBoundingClientRect();
-                animateCardFlight(battleRect, discardRect, null, false, 20);
-                MATCH.table = [];
-                refillBothHands('opp');
-                MATCH.turn = 'player';
-                showToast('Бито! Ваш ход.');
-                renderTableState();
-                checkMatchWinner();
+        function botContinueAttackOrBito() {
+            if (!MATCH || MATCH.gameOver || MATCH.attacker !== 'opp' || MATCH.isP2PHost) return;
+            if (MATCH.playerHand.length === 0 || MATCH.tablePairs.length >= 6) {
+                finishBoutBito();
+                return;
             }
-        }
 
-        function refillBothHands(firstDrawer) {
-            const order = firstDrawer === 'player' ? ['playerHand', 'oppHand'] : ['oppHand', 'playerHand'];
-            for (const key of order) {
-                while (MATCH[key].length < 6 && MATCH.deck.length > 0) {
-                    MATCH[key].push(MATCH.deck.pop());
+            let throwIdx = MATCH.oppHand.findIndex(c => isLegalAttack(c) && c.suit !== MATCH.trumpSuit);
+            let cheated = false;
+            if (throwIdx === -1 && MATCH.cheatingAllowed && !MATCH.oppCaughtCheating && MATCH.oppHand.length > 0 && Math.random() < 0.35) {
+                throwIdx = 0;
+                cheated = true;
+            }
+
+            if (throwIdx !== -1) {
+                const [card] = MATCH.oppHand.splice(throwIdx, 1);
+                const newIdx = MATCH.tablePairs.length;
+                MATCH.tablePairs.push({ attack: card, defense: null, cheatedByOpp: cheated });
+                if (cheated) {
+                    MATCH.unverifiedOppCheatSlot = { type: 'attack', pairIndex: newIdx, card };
                 }
+                const oppRect = document.getElementById('opp-hand-fan').getBoundingClientRect();
+                const gridRect = document.getElementById('battle-grid').getBoundingClientRect();
+                animateCardFlight(oppRect, gridRect, card, true, () => {
+                    renderTableState();
+                });
+            } else {
+                finishBoutBito();
             }
         }
 
-        function checkMatchWinner() {
-            if (!MATCH || MATCH.finished) return false;
+        function checkInstantVictory() {
+            if (!MATCH || MATCH.gameOver) return false;
             if (MATCH.deck.length > 0) return false;
-
-            const uncovered = MATCH.table.some(p => !p.defend);
-            if (uncovered) return false;
 
             const pEmpty = MATCH.playerHand.length === 0;
             const oEmpty = MATCH.oppHand.length === 0;
+            const anyUnbeaten = MATCH.tablePairs.some(p => !p.defense);
 
-            if (!pEmpty && !oEmpty) return false;
-
-            MATCH.finished = true;
-
-            if (pEmpty && oEmpty && MATCH.room.allowDraw) {
-                STATE.coins += MATCH.bet;
-                saveProfile();
-                showMatchResultModal('🤝', 'Боевая ничья!', 'Вы и соперник скинули карты одновременно.', `Возврат ставки: +${MATCH.bet.toLocaleString('ru-RU')} 🪙`);
+            if (pEmpty && oEmpty && !anyUnbeaten && MATCH.room.allowDraw) {
+                MATCH.winnerRole = 'draw';
+                concludeMatch('draw', 'У обоих игроков одновременно закончились карты!');
                 return true;
             }
+            if (pEmpty && !anyUnbeaten) {
+                MATCH.winnerRole = 'host';
+                concludeMatch('win', 'Вы первым сбросили все карты!');
+                return true;
+            }
+            if (oEmpty && (MATCH.attacker === 'player' || !anyUnbeaten)) {
+                MATCH.winnerRole = 'guest';
+                concludeMatch('lose', 'Соперник вышел из игры первым.');
+                return true;
+            }
+            return false;
+        }
 
-            if (pEmpty) {
-                const rake = Math.floor(MATCH.pot * (ADMIN_CONFIG.rakePercent / 100));
-                const prize = MATCH.pot - rake;
-                STATE.coins += prize;
-                STATE.totalWonCoins += (prize - MATCH.bet);
-                STATE.rp += 25;
+        function concludeMatch(outcome, reasonText) {
+            if (!MATCH) return;
+            MATCH.gameOver = true;
+
+            const iconEl = document.getElementById('res-icon');
+            const titleEl = document.getElementById('res-title');
+            const subEl = document.getElementById('res-subtitle');
+            const rewEl = document.getElementById('res-rewards');
+
+            const grossPot = MATCH.room.bet * 2;
+            const rakeFactor = (100 - ADMIN_CONFIG.rakePercent) / 100;
+            const netWinPot = Math.floor(grossPot * rakeFactor);
+
+            if (outcome === 'win') {
+                STATE.coins += netWinPot;
+                STATE.totalWonCoins += netWinPot;
+                STATE.rp += 20;
 
                 unlockAchievement('first_win');
-                if (!MATCH.playerTookAny) unlockAchievement('clean_win');
-                if (MATCH.bet >= 5000) unlockAchievement('high_roller');
-                if (MATCH.lastPlayerAttackCard && MATCH.lastPlayerAttackCard.value === 6) {
-                    unlockAchievement('pogony');
-                }
-                saveProfile();
-                showMatchResultModal('🏆', 'Вы победили!', `Банк стола ваш (комиссия ${ADMIN_CONFIG.rakePercent}%)`, `+${prize.toLocaleString('ru-RU')} 🪙 • +25 RP`);
-                return true;
+                if (!MATCH.playerEverTook) unlockAchievement('clean_win');
+                if (MATCH.lastPlayerCardRank === '6') unlockAchievement('pogony');
+                if (MATCH.room.bet >= 5000) unlockAchievement('high_roller');
+
+                iconEl.textContent = '🏆';
+                titleEl.textContent = 'Победа!';
+                subEl.textContent = reasonText;
+                rewEl.innerHTML = `
+                    <div class="text-amber-400">Выигрыш (с учетом комиссии ${ADMIN_CONFIG.rakePercent}%): +${netWinPot.toLocaleString('ru-RU')} 🪙</div>
+                    <div class="text-emerald-400">Рейтинг сезона: +20 RP</div>
+                `;
+            } else if (outcome === 'draw') {
+                STATE.coins += MATCH.room.bet;
+                iconEl.textContent = '🤝';
+                titleEl.textContent = 'Ничья (Розыгрыш)!';
+                subEl.textContent = reasonText;
+                rewEl.innerHTML = `<div class="text-slate-300">Возврат вашей ставки: +${MATCH.room.bet.toLocaleString('ru-RU')} 🪙</div>`;
             } else {
                 STATE.rp = Math.max(0, STATE.rp - 15);
-                saveProfile();
-                showMatchResultModal('🃏', 'Вы остались в дураках', 'Соперник вышел из игры первым', `-15 RP • Попробуйте отыграться!`);
-                return true;
+                iconEl.textContent = '🃏';
+                titleEl.textContent = 'Поражение';
+                subEl.textContent = reasonText;
+                rewEl.innerHTML = `
+                    <div class="text-rose-400">Потеряно ставки: -${MATCH.room.bet.toLocaleString('ru-RU')} 🪙</div>
+                    <div class="text-slate-400">Рейтинг сезона: -15 RP</div>
+                `;
             }
+
+            saveProfile();
+            openModal('result');
         }
 
         function surrenderMatch() {
-            if (!MATCH) return;
-            MATCH.finished = true;
-            STATE.rp = Math.max(0, STATE.rp - 15);
-            saveProfile();
-            leaveTableToLobby();
-            showToast('Вы сдались (-15 RP)');
-        }
-
-        function showMatchResultModal(icon, title, subtitle, rewardLine) {
-            document.getElementById('res-icon').textContent = icon;
-            document.getElementById('res-title').textContent = title;
-            document.getElementById('res-subtitle').textContent = subtitle;
-            document.getElementById('res-rewards').textContent = rewardLine;
-            openModal('result');
+            if (!MATCH || MATCH.gameOver) {
+                leaveTableToLobby();
+                return;
+            }
+            concludeMatch('lose', 'Вы сдались и покинули стол.');
         }
 
         function leaveTableToLobby() {
             closeModal('result');
+            closeP2PSession();
             document.getElementById('screen-table').classList.add('hidden');
             MATCH = null;
         }
 
         function rematchSameSettings() {
             if (!MATCH) return;
-            const room = MATCH.room;
+            const roomCopy = { ...MATCH.room };
             closeModal('result');
-            if (STATE.coins < room.bet) {
+            if (STATE.coins < roomCopy.bet) {
                 leaveTableToLobby();
+                showToast('Недостаточно монет для реванша!');
                 openModal('shop');
                 return;
             }
-            startNewGame(room);
+            startNewGame(roomCopy);
         }
 
-        function sendTableEmoji(emoji, fromOpp = false) {
-            const spot = document.getElementById(fromOpp ? 'opp-emoji-spot' : 'player-emoji-spot');
-            spot.textContent = emoji;
-            spot.classList.remove('hidden', 'emoji-pop');
-            void spot.offsetWidth;
-            spot.classList.add('emoji-pop');
+        function popEmojiOnSpot(spotId, emoji) {
+            const pSpot = document.getElementById(spotId);
+            if (!pSpot) return;
+            pSpot.textContent = emoji;
+            pSpot.classList.remove('hidden', 'emoji-pop');
+            void pSpot.offsetWidth;
+            pSpot.classList.add('emoji-pop');
+        }
 
-            if (!fromOpp && MATCH && !MATCH.finished) {
-                setTimeout(() => {
-                    const replies = ['😎', '😂', '🐻', '👍', '🔥'];
-                    sendTableEmoji(replies[Math.floor(Math.random() * replies.length)], true);
-                }, 850);
+        function sendTableEmoji(emoji) {
+            popEmojiOnSpot('player-emoji-spot', emoji);
+            if (isLiveP2PMatch()) {
+                P2P.conn.send({ type: 'EMOJI', emoji });
+                return;
             }
+            setTimeout(() => {
+                const replies = ['😎', '😂', '🐻', '👍', '🔥'];
+                popEmojiOnSpot('opp-emoji-spot', replies[Math.floor(Math.random() * replies.length)]);
+            }, 650);
         }
 
-        // ===================== 5. ИНВЕНТАРЬ, МАГАЗИН СКИНОВ, ДОСТИЖЕНИЯ, ЛИДЕРБОРД, АДМИНКА =====================
-        function openModal(name) {
-            if (name === 'inventory') renderInventoryModal();
-            if (name === 'achievements') renderAchievementsModal();
-            if (name === 'leaderboard') renderLeaderboardModal();
-            if (name === 'filters') renderFiltersModal();
-            if (name === 'shop') renderShopModal();
-            if (name === 'admin') renderAdminModal();
-            document.getElementById(`modal-${name}`).classList.remove('hidden');
+        // ===================== 5. ИНВЕНТАРЬ, МАГАЗИН СКИНОВ, ДОСТИЖЕНИЯ, ЛИДЕРЫ =====================
+        function openModal(id) {
+            if (id === 'inventory') renderInventoryModal();
+            if (id === 'achievements') renderAchievementsModal();
+            if (id === 'leaderboard') renderLeaderboardModal();
+            if (id === 'filters') renderFiltersModal();
+            if (id === 'shop') renderShopModal();
+            if (id === 'admin') renderAdminModal();
+            document.getElementById(`modal-${id}`).classList.remove('hidden');
         }
 
-        function closeModal(name) {
-            document.getElementById(`modal-${name}`).classList.add('hidden');
-        }
-
-        function getSkinPreviewMarkup(item) {
-            if (item.category === 'back') {
-                return `<div class="w-10 h-14 rounded-lg ${item.css} shadow-md"></div>`;
-            }
-            if (item.category === 'face') {
-                return `<div class="w-10 h-14 rounded-lg ${item.css} shadow-md flex flex-col justify-between p-1 font-black text-xs"><span>A♠</span><span class="self-center text-base">♠</span></div>`;
-            }
-            return `<div class="w-12 h-10 rounded-xl ${item.css} border border-white/20 shadow-inner"></div>`;
+        function closeModal(id) {
+            document.getElementById(`modal-${id}`).classList.add('hidden');
         }
 
         function switchInventoryTab(tab) {
             currentInventoryTab = tab;
-            document.getElementById('inv-tab-owned').className = tab === 'owned'
-                ? 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-emerald-500 text-slate-950'
-                : 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300';
-            document.getElementById('inv-tab-all').className = tab === 'all'
-                ? 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-emerald-500 text-slate-950'
-                : 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300';
+            document.getElementById('inv-tab-owned').className = `flex-1 py-2 rounded-xl text-xs font-extrabold ${tab === 'owned' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+            document.getElementById('inv-tab-all').className = `flex-1 py-2 rounded-xl text-xs font-extrabold ${tab === 'all' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
             renderInventoryModal();
+        }
+
+        function getSkinPreviewHTML(item) {
+            if (item.category === 'face') {
+                return `
+                    <div class="w-11 h-14 rounded-lg shadow-md ${item.css} flex flex-col justify-between p-1">
+                        <span class="text-[9px] font-black text-rose-600 leading-none">A♥</span>
+                        <span class="text-sm self-center text-rose-600 leading-none">♥</span>
+                        <span class="text-[8px] font-bold self-end text-rose-600 leading-none">A</span>
+                    </div>`;
+            }
+            if (item.category === 'felt') {
+                return `
+                    <div class="w-11 h-14 rounded-lg shadow-md ${item.css} border border-white/20 flex items-center justify-center text-xs">
+                        🃏
+                    </div>`;
+            }
+            return `<div class="w-11 h-14 rounded-lg shadow-md ${item.css}"></div>`;
         }
 
         function renderInventoryModal() {
             const body = document.getElementById('inventory-modal-body');
             const groups = [
-                { key: 'back', label: '🎴 Рубашки карт' },
-                { key: 'face', label: '🃏 Оформление лиц карт' },
-                { key: 'felt', label: '🟢 Сукно игрового стола' }
+                { key: 'back', title: 'Рубашки карт' },
+                { key: 'face', title: 'Стили лиц карт' },
+                { key: 'felt', title: 'Сукно игрового стола' }
             ];
 
             body.innerHTML = groups.map(g => {
                 const items = SKINS_CATALOG.filter(s => s.category === g.key && (currentInventoryTab === 'all' || STATE.ownedSkins.includes(s.id)));
                 return `
                     <div class="space-y-2">
-                        <div class="text-xs font-black text-slate-300">${g.label}</div>
+                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-400">${g.title}</h4>
                         <div class="grid grid-cols-2 gap-2">
                             ${items.map(item => {
                                 const owned = STATE.ownedSkins.includes(item.id);
-                                const equipped = STATE.equipped[g.key] === item.id;
-                                let actionLabel = '';
-                                if (equipped) {
-                                    actionLabel = '<span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-[10px] font-black">✓ Надето</span>';
-                                } else if (owned) {
-                                    actionLabel = '<span class="px-2.5 py-1 rounded-lg bg-slate-700 text-white text-[10px] font-bold">Надеть</span>';
-                                } else if (item.priceStars > 0) {
-                                    actionLabel = `<span class="px-2.5 py-1 rounded-lg bg-sky-500 text-slate-950 text-[10px] font-black">Купить ${item.priceStars} ⭐️</span>`;
-                                } else {
-                                    actionLabel = `<span class="px-2.5 py-1 rounded-lg bg-amber-400 text-slate-950 text-[10px] font-black">Купить ${item.priceCoins} 🪙</span>`;
-                                }
+                                const equipped = STATE.equipped[item.category] === item.id;
+                                let btnLabel = '';
+                                if (equipped) btnLabel = '<span class="text-[10px] font-black text-emerald-400">✓ Надето</span>';
+                                else if (owned) btnLabel = '<span class="text-[10px] font-bold text-slate-300">Надеть</span>';
+                                else if (item.priceCoins > 0) btnLabel = `<span class="text-[10px] font-black text-amber-400">Купить ${item.priceCoins} 🪙</span>`;
+                                else btnLabel = `<span class="text-[10px] font-black text-sky-400">Купить ${item.priceStars} ⭐️</span>`;
 
                                 return `
-                                    <div onclick="handleSkinSelect('${item.id}')" class="cursor-pointer bg-slate-800/90 hover:bg-slate-800 border ${equipped ? 'border-emerald-500' : 'border-slate-700'} rounded-2xl p-2.5 flex items-center gap-2.5 transition active:scale-95">
-                                        ${getSkinPreviewMarkup(item)}
-                                        <div class="flex-1 min-w-0">
-                                            <div class="text-xs font-extrabold text-white truncate">${item.name}</div>
-                                            <div class="mt-1.5">${actionLabel}</div>
+                                    <div onclick="handleSkinClick('${item.id}')" class="bg-slate-800/90 hover:bg-slate-800 border ${equipped ? 'border-emerald-500' : 'border-slate-700'} rounded-2xl p-2.5 flex items-center gap-2.5 cursor-pointer active:scale-95 transition">
+                                        ${getSkinPreviewHTML(item)}
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs font-bold text-white truncate">${item.name}</div>
+                                            <div class="mt-1">${btnLabel}</div>
                                         </div>
                                     </div>
                                 `;
@@ -2293,48 +2754,157 @@
             }).join('');
         }
 
-        function handleSkinSelect(skinId) {
+        function handleSkinClick(skinId) {
             const skin = SKINS_CATALOG.find(s => s.id === skinId);
             if (!skin) return;
 
-            if (STATE.ownedSkins.includes(skin.id)) {
-                STATE.equipped[skin.category] = skin.id;
+            if (STATE.ownedSkins.includes(skinId)) {
+                STATE.equipped[skin.category] = skinId;
                 saveProfile();
                 renderInventoryModal();
-                if (!document.getElementById('modal-shop').classList.contains('hidden')) renderShopModal();
+                renderShopModal();
                 showToast(`Надето: ${skin.name}`);
                 return;
             }
 
-            if (skin.priceStars > 0) {
-                if (STATE.stars < skin.priceStars) {
-                    showToast(`Не хватает Telegram Stars (${skin.priceStars} ⭐️)! Пополните баланс ниже.`);
-                    return;
-                }
-                STATE.stars -= skin.priceStars;
-            } else {
+            if (skin.priceCoins > 0) {
                 if (STATE.coins < skin.priceCoins) {
-                    showToast(`Не хватает монет (${skin.priceCoins} 🪙)!`);
+                    showToast('Недостаточно монет 🪙 для покупки скина!');
                     return;
                 }
                 STATE.coins -= skin.priceCoins;
+            } else if (skin.priceStars > 0) {
+                if (STATE.stars < skin.priceStars) {
+                    showToast('Недостаточно Telegram Stars ⭐️!');
+                    return;
+                }
+                STATE.stars -= skin.priceStars;
             }
 
-            STATE.ownedSkins.push(skin.id);
-            STATE.equipped[skin.category] = skin.id;
+            STATE.ownedSkins.push(skinId);
+            STATE.equipped[skin.category] = skinId;
             saveProfile();
             renderInventoryModal();
-            if (!document.getElementById('modal-shop').classList.contains('hidden')) renderShopModal();
+            renderShopModal();
             showToast(`🎉 Скин «${skin.name}» куплен и сразу надет!`);
         }
 
-        function unlockAchievement(id) {
-            if (STATE.achievements[id]?.unlocked) return;
-            const ach = ACHIEVEMENTS_LIST.find(a => a.id === id);
-            if (!ach) return;
-            STATE.achievements[id] = { unlocked: true, claimed: false };
+        function setShopSkinFilter(cat) {
+            currentShopCategory = cat;
+            renderShopModal();
+        }
+
+        function renderShopModal() {
+            const body = document.getElementById('shop-modal-body');
+            const filteredSkins = SKINS_CATALOG.filter(s => currentShopCategory === 'all' || s.category === currentShopCategory);
+            const catBtn = (c, label) => `
+                <button onclick="setShopSkinFilter('${c}')" class="px-2.5 py-1.5 rounded-xl text-[11px] font-black border transition ${currentShopCategory === c ? 'bg-emerald-500 text-slate-950 border-emerald-400' : 'bg-slate-800 text-slate-300 border-slate-700'}">
+                    ${label}
+                </button>`;
+
+            body.innerHTML = `
+                <div class="space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-xs font-black text-white">🎨 Витрина скинов и кастомизации</div>
+                            <div class="text-[10px] text-slate-400">Покупайте за монеты 🪙 или звезды ⭐️ и сразу надевайте</div>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        ${catBtn('all', 'Все скины')}
+                        ${catBtn('back', 'Рубашки')}
+                        ${catBtn('face', 'Лица карт')}
+                        ${catBtn('felt', 'Сукно стола')}
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        ${filteredSkins.map(item => {
+                            const owned = STATE.ownedSkins.includes(item.id);
+                            const equipped = STATE.equipped[item.category] === item.id;
+                            let actionBadge = '';
+                            if (equipped) actionBadge = `<span class="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 text-[10px] font-black">✓ Надето</span>`;
+                            else if (owned) actionBadge = `<span class="px-2 py-0.5 rounded-lg bg-slate-700 text-white text-[10px] font-bold">Надеть</span>`;
+                            else if (item.priceCoins > 0) actionBadge = `<span class="px-2 py-0.5 rounded-lg bg-amber-400 text-slate-950 text-[10px] font-black">${item.priceCoins} 🪙</span>`;
+                            else actionBadge = `<span class="px-2 py-0.5 rounded-lg bg-sky-400 text-slate-950 text-[10px] font-black">${item.priceStars} ⭐️</span>`;
+
+                            return `
+                                <div onclick="handleSkinClick('${item.id}')" class="bg-slate-800/90 hover:bg-slate-800 border ${equipped ? 'border-emerald-500' : 'border-slate-700'} rounded-2xl p-2.5 flex items-center gap-2.5 cursor-pointer active:scale-95 transition">
+                                    ${getSkinPreviewHTML(item)}
+                                    <div class="min-w-0 flex-1 space-y-1">
+                                        <div class="text-xs font-bold text-white truncate">${item.name}</div>
+                                        <div>${actionBadge}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3 space-y-2">
+                    <div class="text-xs font-black text-amber-300">🎁 Ежедневный бесплатный бонус до ${ADMIN_CONFIG.dailyRefillLimit.toLocaleString('ru-RU')} 🪙</div>
+                    <p class="text-[11px] text-slate-300">Если баланс опустился ниже лимита — пополните его бесплатно:</p>
+                    <button onclick="claimDailyRefill(); renderShopModal()" class="w-full py-2 rounded-xl bg-amber-400 text-slate-950 font-black text-[11px]">
+                        Долить до ${ADMIN_CONFIG.dailyRefillLimit.toLocaleString('ru-RU')} 🪙
+                    </button>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="text-xs font-black text-white">🪙 Пополнить баланс монет за Звезды (⭐️)</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="buyCoinsWithStars(5000, 25)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl p-3 text-left">
+                            <div class="text-sm font-black text-amber-400">+5 000 🪙</div>
+                            <div class="text-[11px] text-sky-400 font-bold mt-1">За 25 ⭐️</div>
+                        </button>
+                        <button onclick="buyCoinsWithStars(25000, 100)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl p-3 text-left">
+                            <div class="text-sm font-black text-amber-400">+25 000 🪙</div>
+                            <div class="text-[11px] text-sky-400 font-bold mt-1">За 100 ⭐️</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="text-xs font-black text-white">⭐️ Пакеты Telegram Stars</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="buyTelegramStarsPack(100)" class="bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 rounded-2xl p-3 text-left">
+                            <div class="text-sm font-black text-sky-300">+100 ⭐️ Звезд</div>
+                            <div class="text-[10px] text-slate-300 mt-1">Мгновенное зачисление</div>
+                        </button>
+                        <button onclick="buyTelegramStarsPack(500)" class="bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 rounded-2xl p-3 text-left">
+                            <div class="text-sm font-black text-sky-300">+500 ⭐️ Звезд</div>
+                            <div class="text-[10px] text-slate-300 mt-1">Выгодный VIP-пакет</div>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function buyCoinsWithStars(coinsAmount, starsCost) {
+            if (STATE.stars < starsCost) {
+                showToast('Недостаточно ⭐️! Сначала пополните пакет Telegram Stars ниже.');
+                return;
+            }
+            STATE.stars -= starsCost;
+            STATE.coins += coinsAmount;
             saveProfile();
-            showToast(`🏆 Открыто достижение «${ach.title}»!`);
+            renderShopModal();
+            showToast(`🪙 Начислено +${coinsAmount.toLocaleString('ru-RU')} монет!`);
+        }
+
+        function buyTelegramStarsPack(amount) {
+            STATE.stars += amount;
+            ADMIN_CONFIG.totalStarsDonated += amount;
+            saveAdminConfigStorage();
+            saveProfile();
+            renderShopModal();
+            showToast(`⭐️ Зачислено +${amount} Telegram Stars!`);
+        }
+
+        function unlockAchievement(id) {
+            if (!STATE.achievements[id]) {
+                STATE.achievements[id] = { unlocked: true, claimed: false };
+                const ach = ACHIEVEMENTS_LIST.find(a => a.id === id);
+                if (ach) showToast(`🏆 Открыто достижение: «${ach.title}»!`);
+                saveProfile();
+            }
         }
 
         function claimAchievementReward(id) {
@@ -2345,221 +2915,94 @@
             STATE.coins += ach.reward;
             saveProfile();
             renderAchievementsModal();
-            showToast(`🎉 Награда +${ach.reward} 🪙 получена!`);
+            showToast(`🎉 Получена награда +${ach.reward} 🪙!`);
         }
 
         function renderAchievementsModal() {
             const body = document.getElementById('achievements-modal-body');
             body.innerHTML = ACHIEVEMENTS_LIST.map(a => {
                 const st = STATE.achievements[a.id] || { unlocked: false, claimed: false };
-                let btn = `<span class="text-[11px] font-bold text-amber-400">+${a.reward} 🪙</span>`;
-                if (st.unlocked && !st.claimed) {
-                    btn = `<button onclick="claimAchievementReward('${a.id}')" class="px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-black text-xs">Забрать +${a.reward} 🪙</button>`;
-                } else if (st.claimed) {
-                    btn = `<span class="text-[11px] font-bold text-emerald-400">✓ Получено</span>`;
-                }
                 return `
-                    <div class="bg-slate-800/85 border ${st.unlocked ? 'border-amber-500/40' : 'border-slate-700/80'} rounded-2xl p-3 flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-3">
+                    <div class="bg-slate-800/85 border ${st.unlocked ? 'border-amber-500/40' : 'border-slate-700'} rounded-2xl p-3 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5">
                             <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-xl">${a.icon}</div>
                             <div>
                                 <div class="text-xs font-black text-white">${a.title}</div>
                                 <div class="text-[11px] text-slate-400">${a.desc}</div>
+                                <div class="text-[10px] text-amber-400 font-bold mt-0.5">Награда: +${a.reward} 🪙</div>
                             </div>
                         </div>
-                        <div class="shrink-0">${btn}</div>
+                        ${st.claimed
+                            ? `<span class="text-[10px] font-bold text-emerald-400 px-2">Получено</span>`
+                            : st.unlocked
+                                ? `<button onclick="claimAchievementReward('${a.id}')" class="px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-black text-xs">Забрать</button>`
+                                : `<span class="text-[10px] font-semibold text-slate-500 px-2">Закрыто</span>`
+                        }
                     </div>
                 `;
             }).join('');
         }
 
+        const LEADERBOARD_MOCK = Array.from({ length: 99 }, (_, idx) => ({
+            name: ['Гроссмейстер_TG', 'КозырнойТуз', 'Виктор_777', 'Император', 'Катала_МСК', 'НочнойВолк', 'АкулаПокера', 'ЗолотойЩит', 'ЛедиУдача', 'Шулер_99'][idx % 10] + ` #${idx + 1}`,
+            rp: Math.max(110, 4200 - idx * 38),
+            wonCoins: Math.max(1500, 12500000 - idx * 120000),
+            isMe: false
+        }));
+
         function switchLeaderboardTab(tab) {
             currentLeaderboardTab = tab;
-            document.getElementById('lb-tab-rp').className = tab === 'rp'
-                ? 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-emerald-500 text-slate-950'
-                : 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300';
-            document.getElementById('lb-tab-coins').className = tab === 'coins'
-                ? 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-amber-400 text-slate-950'
-                : 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300';
+            document.getElementById('lb-tab-rp').className = `flex-1 py-2 rounded-xl text-xs font-extrabold ${tab === 'rp' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+            document.getElementById('lb-tab-coins').className = `flex-1 py-2 rounded-xl text-xs font-extrabold ${tab === 'coins' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
             renderLeaderboardModal();
         }
 
         function renderLeaderboardModal() {
             const body = document.getElementById('leaderboard-modal-body');
-            const names = ['Козырной_Туз', 'Александр_МСК', 'КиберШулер', 'Дмитрий_ТГ', 'Император', 'Леди_Удача', 'Гроссмейстер', 'Ночной_Волк', 'Мастер_Карт', 'Виктор_Про'];
-            const list = [];
-
-            for (let i = 1; i <= 100; i++) {
-                const name = i <= names.length ? names[i - 1] : `Игрок_ТГ_${1000 + i}`;
-                const rp = Math.max(100, 4200 - i * 37);
-                const wonCoins = Math.max(1500, (101 - i) * 95000);
-                list.push({ rank: i, name, rp, wonCoins, isMe: false });
-            }
-            list.push({ rank: 0, name: 'Вы (Игрок #1)', rp: STATE.rp, wonCoins: STATE.totalWonCoins, isMe: true });
-
+            const list = [
+                ...LEADERBOARD_MOCK,
+                { name: `Вы (${CURRENT_TG_USER.name || 'Игрок #1'})`, rp: STATE.rp, wonCoins: STATE.totalWonCoins, isMe: true }
+            ];
             if (currentLeaderboardTab === 'rp') {
                 list.sort((a, b) => b.rp - a.rp);
             } else {
                 list.sort((a, b) => b.wonCoins - a.wonCoins);
             }
 
-            body.innerHTML = list.slice(0, 100).map((item, idx) => {
-                const pos = idx + 1;
-                const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : `#${pos}`;
-                const valText = currentLeaderboardTab === 'rp'
-                    ? `<span class="text-emerald-400 font-black">${item.rp.toLocaleString('ru-RU')} RP</span>`
-                    : `<span class="text-amber-400 font-black">${formatCompactNumber(item.wonCoins)} 🪙</span>`;
+            body.innerHTML = list.slice(0, 100).map((item, i) => {
+                const rankObj = getRankObject(item.rp);
                 return `
-                    <div class="px-3 py-2 rounded-xl flex items-center justify-between text-xs border ${item.isMe ? 'bg-emerald-500/20 border-emerald-500/50' : 'bg-slate-800/75 border-slate-800'}">
+                    <div class="px-3 py-2 rounded-xl border ${item.isMe ? 'bg-emerald-500/15 border-emerald-500/50' : 'bg-slate-800/75 border-slate-700/70'} flex items-center justify-between text-xs">
                         <div class="flex items-center gap-2.5">
-                            <span class="w-7 font-black text-slate-400">${medal}</span>
-                            <span class="font-bold ${item.isMe ? 'text-emerald-300' : 'text-white'}">${item.name}</span>
+                            <span class="w-6 text-center font-black ${i < 3 ? 'text-amber-400' : 'text-slate-400'}">#${i + 1}</span>
+                            <div>
+                                <div class="font-bold ${item.isMe ? 'text-emerald-300' : 'text-white'}">${item.name}</div>
+                                <div class="text-[10px] text-slate-400">${rankObj.icon} ${rankObj.name}</div>
+                            </div>
                         </div>
-                        ${valText}
+                        <div class="font-black ${currentLeaderboardTab === 'rp' ? 'text-emerald-400' : 'text-amber-400'}">
+                            ${currentLeaderboardTab === 'rp' ? `${item.rp} RP` : `${formatCompactNumber(item.wonCoins)} 🪙`}
+                        </div>
                     </div>
                 `;
             }).join('');
         }
 
-        // Магазин скинов и валюты
-        function filterShopSkins(cat) {
-            currentShopCategory = cat;
-            renderShopModal();
-        }
-
-        function renderShopModal() {
-            const body = document.getElementById('shop-modal-body');
-            const filteredSkins = SKINS_CATALOG.filter(s => currentShopCategory === 'all' || s.category === currentShopCategory);
-            const catBtn = (c, label) => `
-                <button onclick="filterShopSkins('${c}')" class="px-2.5 py-1.5 rounded-xl text-[11px] font-black transition ${currentShopCategory === c ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'}">${label}</button>
-            `;
-
-            body.innerHTML = `
-                <!-- 1. Ежедневное бесплатное пополнение -->
-                <div class="bg-slate-800/90 border border-amber-500/30 rounded-2xl p-3 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <div class="text-xs font-black text-amber-300">🎁 Бесплатное пополнение каждый день</div>
-                        <span class="text-[10px] font-bold text-slate-400">Лимит: ${ADMIN_CONFIG.dailyRefillLimit} 🪙</span>
-                    </div>
-                    <p class="text-[11px] text-slate-300">Если на балансе меньше ${ADMIN_CONFIG.dailyRefillLimit.toLocaleString('ru-RU')} 🪙, вы можете бесплатно восстановить баланс.</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="STATE.coins = 200; saveProfile(); renderShopModal(); showToast('Тест: баланс снижен до 200 🪙');" class="py-2 rounded-xl bg-slate-900 border border-slate-700 text-[11px] font-bold text-slate-300">
-                            Тест: Сделать 200 🪙
-                        </button>
-                        <button onclick="claimDailyRefill(); renderShopModal();" class="py-2 rounded-xl bg-amber-400 text-slate-950 font-black text-[11px]">
-                            Долить до ${ADMIN_CONFIG.dailyRefillLimit} 🪙
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 2. ВИТРИНА СКИНОВ ПРЯМО В МАГАЗИНЕ -->
-                <div class="space-y-2.5">
-                    <div class="flex items-center justify-between">
-                        <div class="text-xs font-black text-white">🎨 Витрина скинов (Карты и Столы)</div>
-                        <span class="text-[10px] text-slate-400">${STATE.ownedSkins.length}/${SKINS_CATALOG.length} куплено</span>
-                    </div>
-                    <div class="flex gap-1.5 overflow-x-auto pb-1">
-                        ${catBtn('all', 'Все скины')}
-                        ${catBtn('back', 'Рубашки')}
-                        ${catBtn('face', 'Лица карт')}
-                        ${catBtn('felt', 'Сукно столов')}
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        ${filteredSkins.map(item => {
-                            const owned = STATE.ownedSkins.includes(item.id);
-                            const equipped = STATE.equipped[item.category] === item.id;
-                            let btnHtml = '';
-                            if (equipped) {
-                                btnHtml = `<span class="inline-block px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-[10px] font-black">✓ Надето</span>`;
-                            } else if (owned) {
-                                btnHtml = `<span class="inline-block px-2.5 py-1 rounded-lg bg-slate-700 text-white text-[10px] font-bold">Надеть</span>`;
-                            } else if (item.priceStars > 0) {
-                                btnHtml = `<span class="inline-block px-2.5 py-1 rounded-lg bg-sky-500 text-slate-950 text-[10px] font-black">Купить • ${item.priceStars} ⭐️</span>`;
-                            } else {
-                                btnHtml = `<span class="inline-block px-2.5 py-1 rounded-lg bg-amber-400 text-slate-950 text-[10px] font-black">Купить • ${item.priceCoins} 🪙</span>`;
-                            }
-                            return `
-                                <div onclick="handleSkinSelect('${item.id}')" class="cursor-pointer bg-slate-800/90 hover:bg-slate-800 border ${equipped ? 'border-emerald-500' : 'border-slate-700'} rounded-2xl p-2.5 flex items-center gap-2.5 transition active:scale-95">
-                                    ${getSkinPreviewMarkup(item)}
-                                    <div class="flex-1 min-w-0">
-                                        <div class="text-xs font-extrabold text-white truncate">${item.name}</div>
-                                        <div class="text-[10px] text-slate-400">${item.category === 'back' ? 'Рубашка' : item.category === 'face' ? 'Колода' : 'Стол'}</div>
-                                        <div class="mt-1">${btnHtml}</div>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
-
-                <!-- 3. Пакеты игровых монет за Telegram Stars -->
-                <div class="space-y-2">
-                    <div class="text-xs font-black text-slate-300">🪙 Пополнить баланс монет за Звезды</div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="buyCoinsForStars(10000, 25)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl p-3 text-left">
-                            <div class="text-sm font-black text-amber-400">+10 000 🪙</div>
-                            <div class="text-[11px] text-sky-300 font-bold mt-1">За 25 ⭐️</div>
-                        </button>
-                        <button onclick="buyCoinsForStars(50000, 100)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl p-3 text-left">
-                            <div class="text-sm font-black text-amber-400">+50 000 🪙</div>
-                            <div class="text-[11px] text-sky-300 font-bold mt-1">За 100 ⭐️</div>
-                        </button>
-                        <button onclick="buyCoinsForStars(250000, 350)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl p-3 text-left">
-                            <div class="text-sm font-black text-amber-400">+250 000 🪙</div>
-                            <div class="text-[11px] text-sky-300 font-bold mt-1">За 350 ⭐️</div>
-                        </button>
-                        <button onclick="buyCoinsForStars(1000000, 1000)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl p-3 text-left">
-                            <div class="text-sm font-black text-amber-400">+1 000 000 🪙</div>
-                            <div class="text-[11px] text-sky-300 font-bold mt-1">За 1 000 ⭐️</div>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 4. Пакеты Telegram Stars -->
-                <div class="space-y-2">
-                    <div class="text-xs font-black text-slate-300">⭐️ Пакеты Telegram Stars (Тестовый шлюз)</div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button onclick="addTelegramStars(50)" class="py-2.5 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-300 font-black text-xs">+50 ⭐️</button>
-                        <button onclick="addTelegramStars(250)" class="py-2.5 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-300 font-black text-xs">+250 ⭐️</button>
-                        <button onclick="addTelegramStars(1000)" class="py-2.5 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-300 font-black text-xs">+1 000 ⭐️</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function buyCoinsForStars(coins, starsCost) {
-            if (STATE.stars < starsCost) {
-                showToast(`Недостаточно Telegram Stars (${starsCost} ⭐️)! Нажмите на кнопку +⭐️ ниже.`);
-                return;
-            }
-            STATE.stars -= starsCost;
-            STATE.coins += coins;
-            saveProfile();
-            renderShopModal();
-            showToast(`✅ Начислено +${coins.toLocaleString('ru-RU')} 🪙!`);
-        }
-
-        function addTelegramStars(amount) {
-            STATE.stars += amount;
-            ADMIN_CONFIG.totalStarsDonated += amount;
-            saveProfile();
-            renderShopModal();
-            showToast(`⭐️ Оплата Telegram Stars успешна: +${amount} ⭐️!`);
-        }
-
-        // Промокоды
+        // ===================== 6. ПРОМОКОДЫ И ПОЛНОЦЕННАЯ АДМИН-ПАНЕЛЬ =====================
         function redeemPromoCode() {
             const input = document.getElementById('promo-code-input');
             const code = input.value.trim().toUpperCase();
-            if (!code) return;
-
+            if (!code) {
+                showToast('Введите промокод!');
+                return;
+            }
             if (STATE.usedPromos.includes(code)) {
                 showToast('Вы уже активировали этот промокод!');
                 return;
             }
             const promo = PROMO_CODES.find(p => p.code === code);
             if (!promo || promo.usesLeft <= 0) {
-                showToast('❌ Промокод не найден или закончился!');
+                showToast('❌ Промокод не найден или закончились активации');
                 return;
             }
 
@@ -2570,17 +3013,14 @@
             saveProfile();
             input.value = '';
             closeModal('promo');
-            showToast(`🎉 Код ${code} активирован: +${promo.coins.toLocaleString('ru-RU')} 🪙 ${promo.stars > 0 ? `и +${promo.stars} ⭐️` : ''}!`);
+            showToast(`🎉 Код ${code} активирован! Начислено +${promo.coins} 🪙 и +${promo.stars} ⭐️`);
         }
 
-        // ===================== 6. ПОЛНОЦЕННАЯ АДМИН-ПАНЕЛЬ =====================
         function switchAdminTab(tab) {
             currentAdminTab = tab;
             ['dash', 'skins', 'users', 'promos'].forEach(t => {
-                const el = document.getElementById(`adm-tab-${t}`);
-                el.className = t === tab
-                    ? 'py-1.5 rounded-xl text-[11px] font-black bg-rose-500 text-white'
-                    : 'py-1.5 rounded-xl text-[11px] font-black bg-slate-800 text-slate-300';
+                document.getElementById(`adm-tab-${t}`).className =
+                    `py-1.5 rounded-xl text-[11px] font-black ${t === tab ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-300'}`;
             });
             renderAdminModal();
         }
@@ -2590,64 +3030,50 @@
 
             if (currentAdminTab === 'dash') {
                 body.innerHTML = `
-                    <!-- Метрики -->
-                    <!-- Настройки экономики и Доступа Владельца -->
-                    <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-3 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <div class="text-xs font-black text-white">🔒 Доступ к Админке и Настройки</div>
-                            <span class="text-[10px] font-bold text-emerald-400">Ваш ID: ${CURRENT_TG_USER.id}</span>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-2.5 text-center">
+                            <div class="text-[10px] text-slate-400 font-bold">Активных столов</div>
+                            <div class="text-base font-black text-emerald-400 mt-0.5">${ALL_SESSIONS.length}</div>
                         </div>
-                        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 text-[10px] text-slate-300 space-y-1.5">
-                            <div>Админка скрыта от других аккаунтов. Привяжите ваш текущий Telegram ID (<b>${CURRENT_TG_USER.id}</b>), чтобы кнопка «👑 Адм» была видна только вам:</div>
-                            <button onclick="bindMyTelegramIdAsOwner()" class="w-full py-1.5 rounded-lg bg-rose-500 hover:bg-rose-400 text-white font-black text-[11px]">
-                                📌 Закрепить админку только за моим аккаунтом (${CURRENT_TG_USER.name})
-                            </button>
+                        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-2.5 text-center">
+                            <div class="text-[10px] text-slate-400 font-bold">Сыграно партий</div>
+                            <div class="text-base font-black text-amber-400 mt-0.5">${ADMIN_CONFIG.totalGamesPlayed}</div>
+                        </div>
+                        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-2.5 text-center">
+                            <div class="text-[10px] text-slate-400 font-bold">Донат Stars</div>
+                            <div class="text-base font-black text-sky-400 mt-0.5">${ADMIN_CONFIG.totalStarsDonated} ⭐️</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-3 space-y-2.5">
+                        <div class="text-xs font-black text-white">⚙️ Настройки экономики и Telegram-бота</div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 font-bold block mb-1">Username вашего бота (для инвайт-ссылок):</label>
+                            <input id="adm-bot-username" type="text" value="${ADMIN_CONFIG.botUsername}" placeholder="durak_play_game" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-sky-300 mb-2">
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="text-[10px] text-slate-400 font-bold block mb-1">Username бота (без @)</label>
-                                <input id="adm-bot-username" type="text" value="${ADMIN_CONFIG.botUsername || 'durak_online_bot'}" placeholder="durak_online_bot" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black text-sky-400">
+                                <label class="text-[10px] text-slate-400 font-bold">Лимит ежедневного долива (🪙)</label>
+                                <input id="adm-refill-input" type="number" value="${ADMIN_CONFIG.dailyRefillLimit}" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-amber-400">
                             </div>
                             <div>
-                                <label class="text-[10px] text-slate-400 font-bold block mb-1">Секретный PIN админа</label>
-                                <input id="adm-secret-pin" type="text" value="${ADMIN_CONFIG.adminPin || '7777'}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black text-rose-400">
+                                <label class="text-[10px] text-slate-400 font-bold">Комиссия банка стола (%)</label>
+                                <input id="adm-rake-input" type="number" min="0" max="30" value="${ADMIN_CONFIG.rakePercent}" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-emerald-400">
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-2.5">
-                            <div>
-                                <label class="text-[10px] text-slate-400 font-bold block mb-1">Ежедневный долив (🪙)</label>
-                                <input id="adm-refill-input" type="number" value="${ADMIN_CONFIG.dailyRefillLimit}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black text-amber-400">
-                            </div>
-                            <div>
-                                <label class="text-[10px] text-slate-400 font-bold block mb-1">Комиссия со стола (%)</label>
-                                <input id="adm-rake-input" type="number" value="${ADMIN_CONFIG.rakePercent}" min="0" max="30" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black text-emerald-400">
-                            </div>
-                        </div>
-                        <button onclick="saveAdminEconomyConfig()" class="w-full py-2 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">
+                        <button onclick="saveAdminEconomySettings()" class="w-full py-2 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">
                             💾 Сохранить параметры
                         </button>
                     </div>
 
-                    <!-- Инструменты быстрого тестирования -->
-                    <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-3 space-y-2">
+                    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-3 space-y-2">
                         <div class="text-xs font-black text-white">⚡ Быстрые действия для плей-теста</div>
                         <div class="grid grid-cols-2 gap-2">
-                            <button onclick="adminGiveSelfCurrency(50000, 0)" class="py-2 px-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-black text-[11px]">
-                                +50 000 🪙 себе
-                            </button>
-                            <button onclick="adminGiveSelfCurrency(0, 500)" class="py-2 px-2.5 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-300 font-black text-[11px]">
-                                +500 ⭐️ себе
-                            </button>
-                            <button onclick="adminUnlockAllSkins()" class="py-2 px-2.5 rounded-xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-black text-[11px]">
-                                🔓 Открыть все скины
-                            </button>
-                            <button onclick="adminGiveSelfRp(500)" class="py-2 px-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-black text-[11px]">
-                                +500 RP рейтинга
-                            </button>
+                            <button onclick="adminGiveSelfCurrency(10000, 0)" class="py-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-black text-xs">+10 000 🪙 себе</button>
+                            <button onclick="adminGiveSelfCurrency(0, 500)" class="py-2 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-300 font-black text-xs">+500 ⭐️ себе</button>
+                            <button onclick="adminUnlockAllSkins()" class="py-2 rounded-xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-black text-xs">🔓 Открыть все скины</button>
+                            <button onclick="adminGiveSelfRank(500)" class="py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-black text-xs">+500 RP рейтинга</button>
                         </div>
-                        <button onclick="adminResetProfile()" class="w-full py-2 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300 font-bold text-[11px] mt-1">
-                            🔄 Сбросить мой профиль к начальному
-                        </button>
                     </div>
                 `;
                 return;
@@ -2655,7 +3081,6 @@
 
             if (currentAdminTab === 'skins') {
                 body.innerHTML = `
-                    <!-- Добавление нового скина -->
                     <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-3 space-y-2.5">
                         <div class="text-xs font-black text-white">➕ Добавить новый скин в Магазин</div>
                         <div class="grid grid-cols-2 gap-2">
@@ -2667,39 +3092,19 @@
                             </select>
                         </div>
                         <div class="grid grid-cols-3 gap-2">
-                            <select id="adm-skin-css" class="bg-slate-950 border border-slate-700 rounded-xl px-2 py-1.5 text-[11px] text-white">
-                                <option value="back-gold">Стиль: Золото</option>
-                                <option value="back-neon">Стиль: Неон</option>
-                                <option value="back-ruby">Стиль: Рубин</option>
-                                <option value="felt-cyber">Стол: Кибер</option>
-                                <option value="felt-crimson">Стол: Бордо</option>
-                                <option value="face-gold">Колода: Золото</option>
+                            <select id="adm-skin-css" class="bg-slate-950 border border-slate-700 rounded-xl px-2 py-1.5 text-xs text-white">
+                                <option value="back-gold">Золотой градиент</option>
+                                <option value="back-neon">Кибер Неон</option>
+                                <option value="back-ruby">Рубиновый</option>
+                                <option value="felt-royal">Сапфир</option>
+                                <option value="felt-cyber">Пурпур</option>
                             </select>
-                            <input id="adm-skin-coins" type="number" placeholder="Цена 🪙" value="1500" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-amber-400 font-bold">
-                            <input id="adm-skin-stars" type="number" placeholder="Цена ⭐️" value="0" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-sky-400 font-bold">
+                            <input id="adm-skin-coins" type="number" placeholder="Цена 🪙" value="1500" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-amber-300 font-bold">
+                            <input id="adm-skin-stars" type="number" placeholder="Цена ⭐️" value="0" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-sky-300 font-bold">
                         </div>
-                        <button onclick="adminCreateSkin()" class="w-full py-2 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">
-                            Добавить скин в каталог
+                        <button onclick="adminCreateNewSkin()" class="w-full py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs">
+                            ✨ Опубликовать скин в Магазине
                         </button>
-                    </div>
-
-                    <!-- Список всех скинов -->
-                    <div class="space-y-1.5">
-                        <div class="text-xs font-black text-slate-300">Текущие скины (${SKINS_CATALOG.length})</div>
-                        ${SKINS_CATALOG.map(s => `
-                            <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex items-center justify-between text-xs">
-                                <div class="flex items-center gap-2">
-                                    ${getSkinPreviewMarkup(s)}
-                                    <div>
-                                        <div class="font-bold text-white">${s.name}</div>
-                                        <div class="text-[10px] text-slate-400">${s.priceStars > 0 ? `${s.priceStars} ⭐️` : `${s.priceCoins} 🪙`}</div>
-                                    </div>
-                                </div>
-                                <button onclick="handleSkinSelect('${s.id}'); renderAdminModal();" class="px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-[10px] font-bold text-white">
-                                    ${STATE.ownedSkins.includes(s.id) ? 'Надеть' : 'Тест-выдача'}
-                                </button>
-                            </div>
-                        `).join('')}
                     </div>
                 `;
                 return;
@@ -2708,30 +3113,16 @@
             if (currentAdminTab === 'users') {
                 body.innerHTML = `
                     <div class="space-y-2">
-                        <div class="text-xs font-black text-white">👥 Управление игроками и тестерами</div>
+                        <div class="text-xs font-black text-white">👥 Список игроков</div>
                         ${MOCK_USERS_DB.map(u => `
-                            <div class="bg-slate-800 border ${u.banned ? 'border-rose-500/60 opacity-60' : 'border-slate-700'} rounded-2xl p-2.5 flex items-center justify-between gap-2">
+                            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-2.5 flex items-center justify-between gap-2">
                                 <div>
-                                    <div class="text-xs font-black text-white">${u.name} ${u.banned ? '<span class="text-rose-400">(БАН)</span>' : ''}</div>
+                                    <div class="text-xs font-black text-white">${u.name}</div>
                                     <div class="text-[10px] text-slate-400">${u.rp} RP • <span class="text-amber-400 font-bold">${u.coins.toLocaleString('ru-RU')} 🪙</span></div>
                                 </div>
                                 <div class="flex items-center gap-1">
-                                    <button onclick="adminBonusUser(${u.id}, 5000)" class="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-[10px] font-black">+5K 🪙</button>
-                                    ${!u.isSelf ? `<button onclick="adminToggleBanUser(${u.id})" class="px-2 py-1 rounded-lg ${u.banned ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'} text-[10px] font-black">${u.banned ? 'Разбан' : 'Бан'}</button>` : ''}
+                                    <button onclick="adminAdjustUserCoins(${u.id}, 5000)" class="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-[10px] font-black">+5K 🪙</button>
                                 </div>
-                            </div>
-                        `).join('')}
-                    </div>
-
-                    <div class="space-y-2 pt-2 border-t border-slate-800">
-                        <div class="text-xs font-black text-white">🃏 Активные комнаты (${ALL_SESSIONS.length})</div>
-                        ${ALL_SESSIONS.map(s => `
-                            <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex items-center justify-between text-xs">
-                                <div>
-                                    <div class="font-bold text-white">${s.title} (${formatCompactNumber(s.bet)} 🪙)</div>
-                                    <div class="text-[10px] text-slate-400">${s.host} • ${s.deckSize} карт</div>
-                                </div>
-                                <button onclick="adminDeleteSession(${s.id})" class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 text-[10px] font-bold">Удалить</button>
                             </div>
                         `).join('')}
                     </div>
@@ -2745,58 +3136,27 @@
                         <div class="text-xs font-black text-white">🎁 Создать промокод для друзей</div>
                         <div class="grid grid-cols-3 gap-2">
                             <input id="adm-promo-code" type="text" placeholder="КОД (напр. VIP)" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black uppercase text-emerald-400">
-                            <input id="adm-promo-coins" type="number" placeholder="Монеты 🪙" value="5000" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-amber-400">
-                            <input id="adm-promo-stars" type="number" placeholder="Звезды ⭐️" value="50" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-sky-400">
+                            <input id="adm-promo-coins" type="number" placeholder="Монеты 🪙" value="5000" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-amber-300 font-bold">
+                            <input id="adm-promo-stars" type="number" placeholder="Звезды ⭐️" value="50" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-sky-300 font-bold">
                         </div>
                         <button onclick="adminCreatePromo()" class="w-full py-2 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">
-                            Создать промокод
+                            ➕ Создать промокод
                         </button>
-                    </div>
-
-                    <div class="space-y-1.5">
-                        <div class="text-xs font-black text-slate-300">Активные промокоды</div>
-                        ${PROMO_CODES.map(p => `
-                            <div class="bg-slate-800 border border-slate-700 rounded-xl p-2.5 flex items-center justify-between text-xs">
-                                <div>
-                                    <span class="font-black text-emerald-400">${p.code}</span>
-                                    <div class="text-[10px] text-slate-400">+${p.coins.toLocaleString('ru-RU')} 🪙 • +${p.stars} ⭐️ (осталось: ${p.usesLeft})</div>
-                                </div>
-                                <button onclick="copyTextToClipboard('${p.code}'); showToast('Код ${p.code} скопирован!');" class="px-2.5 py-1 rounded-lg bg-slate-700 text-white text-[10px] font-bold">
-                                    Копировать
-                                </button>
-                            </div>
-                        `).join('')}
                     </div>
                 `;
             }
         }
 
-        function saveAdminEconomyConfig() {
-            const refillVal = parseInt(document.getElementById('adm-refill-input').value, 10);
-            const rakeVal = parseInt(document.getElementById('adm-rake-input').value, 10);
-            const botUserEl = document.getElementById('adm-bot-username');
-            const pinEl = document.getElementById('adm-secret-pin');
-            if (botUserEl && botUserEl.value.trim()) {
-                ADMIN_CONFIG.botUsername = botUserEl.value.trim().replace(/^@/, '');
-            }
-            if (pinEl && pinEl.value.trim()) {
-                ADMIN_CONFIG.adminPin = pinEl.value.trim();
-            }
-            if (!isNaN(refillVal) && refillVal >= 100) ADMIN_CONFIG.dailyRefillLimit = refillVal;
-            if (!isNaN(rakeVal) && rakeVal >= 0 && rakeVal <= 30) ADMIN_CONFIG.rakePercent = rakeVal;
+        function saveAdminEconomySettings() {
+            const botName = document.getElementById('adm-bot-username').value.trim().replace('@', '');
+            const refill = Number(document.getElementById('adm-refill-input').value) || 1500;
+            const rake = Math.min(30, Math.max(0, Number(document.getElementById('adm-rake-input').value) || 0));
+            if (botName) ADMIN_CONFIG.botUsername = botName;
+            ADMIN_CONFIG.dailyRefillLimit = refill;
+            ADMIN_CONFIG.rakePercent = rake;
             saveAdminConfigStorage();
-            saveProfile();
-            renderAdminModal();
-            showToast(`✅ Сохранено! Бот: @${ADMIN_CONFIG.botUsername}`);
-        }
-
-        function bindMyTelegramIdAsOwner() {
-            ADMIN_CONFIG.ownerTelegramIds = [String(CURRENT_TG_USER.id)];
-            ADMIN_CONFIG.ownerNames = [CURRENT_TG_USER.name, CURRENT_TG_USER.username].filter(Boolean);
-            saveAdminConfigStorage();
-            updateAdminVisibilityUI();
-            renderAdminModal();
-            showToast(`👑 Админка закреплена строго за аккаунтом ${CURRENT_TG_USER.name} (ID: ${CURRENT_TG_USER.id})!`);
+            updateHeaderAndHomeUI();
+            showToast(`✅ Настройки сохранены: бот @${ADMIN_CONFIG.botUsername}`);
         }
 
         function adminGiveSelfCurrency(coins, stars) {
@@ -2804,223 +3164,164 @@
             STATE.stars += stars;
             saveProfile();
             renderAdminModal();
-            showToast(`✅ Начислено: ${coins ? `+${coins.toLocaleString('ru-RU')} 🪙` : ''} ${stars ? `+${stars} ⭐️` : ''}`);
+            showToast(`👑 Выдано: ${coins ? `+${coins} 🪙` : ''} ${stars ? `+${stars} ⭐️` : ''}`);
         }
 
-        function adminGiveSelfRp(rpDelta) {
-            STATE.rp = Math.max(0, STATE.rp + rpDelta);
+        function adminGiveSelfRank(rpDelta) {
+            STATE.rp += rpDelta;
             saveProfile();
             renderAdminModal();
-            showToast(`✅ Рейтинг увеличен на +${rpDelta} RP!`);
+            showToast(`👑 Рейтинг увеличен на +${rpDelta} RP!`);
         }
 
         function adminUnlockAllSkins() {
-            SKINS_CATALOG.forEach(s => {
-                if (!STATE.ownedSkins.includes(s.id)) STATE.ownedSkins.push(s.id);
-            });
+            STATE.ownedSkins = SKINS_CATALOG.map(s => s.id);
             saveProfile();
-            renderAdminModal();
             showToast('🔓 Все скины разблокированы в вашем Инвентаре!');
         }
 
-        function adminResetProfile() {
-            STATE = JSON.parse(JSON.stringify(DEFAULT_STATE));
-            saveProfile();
-            renderAdminModal();
-            showToast('🔄 Профиль сброшен к стандартным значениям');
-        }
-
-        function adminCreateSkin() {
+        function adminCreateNewSkin() {
             const name = document.getElementById('adm-skin-name').value.trim();
-            const cat = document.getElementById('adm-skin-cat').value;
+            const category = document.getElementById('adm-skin-cat').value;
             const css = document.getElementById('adm-skin-css').value;
-            const coins = parseInt(document.getElementById('adm-skin-coins').value, 10) || 0;
-            const stars = parseInt(document.getElementById('adm-skin-stars').value, 10) || 0;
+            const priceCoins = Number(document.getElementById('adm-skin-coins').value) || 0;
+            const priceStars = Number(document.getElementById('adm-skin-stars').value) || 0;
             if (!name) {
-                showToast('Введите название нового скина');
+                showToast('Введите название скина!');
                 return;
             }
-            const id = `${cat}-custom-${Date.now()}`;
-            SKINS_CATALOG.push({ id, category: cat, name, css, priceCoins: coins, priceStars: stars });
+            const id = `${category}-custom-${Date.now()}`;
+            SKINS_CATALOG.push({ id, category, name, css, priceCoins, priceStars });
             renderAdminModal();
-            showToast(`🎨 Скин «${name}» добавлен в Магазин и Инвентарь!`);
+            showToast(`🎨 Скин «${name}» добавлен в Магазин!`);
         }
 
-        function adminBonusUser(userId, coins) {
+        function adminAdjustUserCoins(userId, delta) {
             const u = MOCK_USERS_DB.find(x => x.id === userId);
             if (!u) return;
-            u.coins += coins;
+            u.coins += delta;
             if (u.isSelf) {
-                STATE.coins += coins;
+                STATE.coins += delta;
                 saveProfile();
             }
             renderAdminModal();
-            showToast(`Игроку ${u.name} начислено +${coins.toLocaleString('ru-RU')} 🪙`);
-        }
-
-        function adminToggleBanUser(userId) {
-            const u = MOCK_USERS_DB.find(x => x.id === userId);
-            if (!u || u.isSelf) return;
-            u.banned = !u.banned;
-            renderAdminModal();
-            showToast(u.banned ? `🚫 ${u.name} заблокирован` : `✅ ${u.name} разблокирован`);
-        }
-
-        function adminDeleteSession(sessionId) {
-            ALL_SESSIONS = ALL_SESSIONS.filter(s => s.id !== sessionId);
-            saveLiveSessions();
-            renderAdminModal();
-            renderPublicSessions();
-            renderPrivateSessions();
-            showToast('Стол удален администратором');
+            showToast(`Игроку ${u.name} начислено +${delta} 🪙`);
         }
 
         function adminCreatePromo() {
             const code = document.getElementById('adm-promo-code').value.trim().toUpperCase();
-            const coins = parseInt(document.getElementById('adm-promo-coins').value, 10) || 0;
-            const stars = parseInt(document.getElementById('adm-promo-stars').value, 10) || 0;
+            const coins = Number(document.getElementById('adm-promo-coins').value) || 0;
+            const stars = Number(document.getElementById('adm-promo-stars').value) || 0;
             if (!code) {
-                showToast('Введите код промокода!');
+                showToast('Укажите код!');
                 return;
             }
-            PROMO_CODES.unshift({ code, coins, stars, usesLeft: 100 });
+            PROMO_CODES.unshift({ code, coins, stars, usesLeft: 50 });
             renderAdminModal();
             showToast(`🎁 Промокод ${code} создан!`);
         }
 
-        // Тактильная отдача Telegram (Haptic Feedback)
-        function triggerHaptic(style = 'light') {
-            try {
-                const hf = window.Telegram?.WebApp?.HapticFeedback;
-                if (!hf) return;
-                if (style === 'success' || style === 'warning' || style === 'error') {
-                    hf.notificationOccurred(style);
-                } else {
-                    hf.impactOccurred(style);
-                }
-            } catch (e) {}
-        }
+        window.addEventListener('resize', () => {
+            if (MATCH && !MATCH.gameOver) renderPlayerHandFan();
+        });
 
-        // Инициализация Telegram Mini App (профиль, полный экран, deep-link комнаты)
+        // ===================== 7. ИНТЕГРАЦИЯ TELEGRAM MINI APPS SDK =====================
         function initTelegramMiniApp() {
-            ADMIN_CONFIG.botUsername = ADMIN_CONFIG.botUsername || 'durak_online_bot';
-            try {
-                const tg = window.Telegram?.WebApp;
-                if (!tg) return;
+            const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+            if (!tg) return;
 
+            try {
                 tg.ready();
                 tg.expand();
-                if (typeof tg.disableVerticalSwipes === 'function') {
-                    tg.disableVerticalSwipes();
-                }
-                if (typeof tg.setHeaderColor === 'function') {
-                    tg.setHeaderColor('#0f172a');
-                }
-                if (typeof tg.setBackgroundColor === 'function') {
-                    tg.setBackgroundColor('#090d16');
-                }
-
-                const user = tg.initDataUnsafe?.user;
-                if (user) {
-                    const displayName = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || `Игрок #${user.id}`;
-                    CURRENT_TG_USER = {
-                        id: String(user.id),
-                        name: displayName,
-                        username: user.username || ''
-                    };
-                    // Перезагружаем личный профиль именно для этого Telegram ID
-                    STATE = loadProfile();
-
-                    // Подгружаем облачное сохранение из Telegram CloudStorage, если оно есть
-                    try {
-                        const cs = tg.CloudStorage;
-                        if (cs && typeof cs.getItem === 'function') {
-                            cs.getItem('durak_profile_v2', (err, cloudVal) => {
-                                if (!err && cloudVal) {
-                                    try {
-                                        const parsedCloud = JSON.parse(cloudVal);
-                                        STATE = {
-                                            ...DEFAULT_STATE,
-                                            ...parsedCloud,
-                                            equipped: { ...DEFAULT_STATE.equipped, ...(parsedCloud.equipped || {}) },
-                                            achievements: { ...(parsedCloud.achievements || {}) },
-                                            usedPromos: parsedCloud.usedPromos || []
-                                        };
-                                        updateHeaderAndHomeUI();
-                                    } catch (e) {}
-                                }
-                            });
-                        }
-                    } catch (e) {}
-
-                    const nameEl = document.getElementById('header-user-name');
-                    if (nameEl) nameEl.textContent = displayName;
-
-                    const selfInDb = MOCK_USERS_DB.find(u => u.isSelf);
-                    if (selfInDb) selfInDb.name = displayName;
-
-                    if (user.photo_url) {
-                        const imgEl = document.getElementById('header-user-photo');
-                        const emojiEl = document.getElementById('header-user-avatar');
-                        if (imgEl && emojiEl) {
-                            imgEl.src = user.photo_url;
-                            imgEl.classList.remove('hidden');
-                            emojiEl.classList.add('hidden');
-                        }
-                    }
-                }
-
-                // Переход по приглашению друга (room_ID_BET_DECK_MODE_CHEAT_PASS)
-                const startParam = tg.initDataUnsafe?.start_param;
-                if (startParam && startParam.startsWith('room_')) {
-                    const parts = startParam.split('_');
-                    const roomId = parseInt(parts[1], 10);
-                    const betVal = parseInt(parts[2], 10) || 250;
-                    const deckVal = parseInt(parts[3], 10) || 36;
-                    const modeVal = parts[4] === 'per' ? 'perevodnoy' : 'podkidnoy';
-                    const cheatVal = parts[5] === '1';
-                    const passVal = parts[6] && parts[6] !== 'open' ? parts[6] : null;
-
-                    if (!isNaN(roomId)) {
-                        let invitedRoom = ALL_SESSIONS.find(s => s.id === roomId);
-                        if (!invitedRoom) {
-                            invitedRoom = {
-                                id: roomId,
-                                title: `Стол друга #${roomId}`,
-                                host: 'Друг из Telegram',
-                                avatar: '🦊',
-                                rank: 'Золото',
-                                bet: betVal,
-                                maxPlayers: 2,
-                                curPlayers: 1,
-                                deckSize: deckVal,
-                                mode: modeVal,
-                                cheating: cheatVal,
-                                allowDraw: false,
-                                throwRule: 'neighbors',
-                                isPrivate: !!passVal,
-                                password: passVal || '7777'
-                            };
-                            ALL_SESSIONS.unshift(invitedRoom);
-                            saveLiveSessions();
-                        }
-                        setTimeout(() => {
-                            showToast(`🔗 Подключение к столу друга #${roomId}...`);
-                            startNewGame(invitedRoom);
-                        }, 400);
-                    }
-                }
+                if (typeof tg.disableVerticalSwipes === 'function') tg.disableVerticalSwipes();
+                if (typeof tg.setHeaderColor === 'function') tg.setHeaderColor('#0f172a');
+                if (typeof tg.setBackgroundColor === 'function') tg.setBackgroundColor('#090d16');
             } catch (e) {}
-            updateAdminVisibilityUI();
+
+            const user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+            if (user) {
+                const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || 'Игрок TG';
+                CURRENT_TG_USER = {
+                    id: String(user.id),
+                    name: fullName,
+                    username: user.username || ''
+                };
+
+                STATE = loadProfile();
+
+                try {
+                    if (tg.CloudStorage && typeof tg.CloudStorage.getItem === 'function') {
+                        tg.CloudStorage.getItem('durak_profile_v2', (err, val) => {
+                            if (!err && val) {
+                                try {
+                                    const cloudParsed = JSON.parse(val);
+                                    STATE = { ...DEFAULT_STATE, ...cloudParsed };
+                                    updateHeaderAndHomeUI();
+                                } catch (e) {}
+                            }
+                        });
+                    }
+                } catch (e) {}
+
+                const nameEl = document.getElementById('header-user-name');
+                if (nameEl) nameEl.textContent = fullName;
+
+                const selfEntry = MOCK_USERS_DB.find(u => u.isSelf);
+                if (selfEntry) {
+                    selfEntry.name = `${fullName} (@${user.username || 'tg'})`;
+                    selfEntry.coins = STATE.coins;
+                    selfEntry.rp = STATE.rp;
+                }
+
+                if (user.photo_url) {
+                    const imgEl = document.getElementById('header-user-photo');
+                    const emojiEl = document.getElementById('header-user-avatar');
+                    if (imgEl && emojiEl) {
+                        imgEl.src = user.photo_url;
+                        imgEl.classList.remove('hidden');
+                        emojiEl.classList.add('hidden');
+                    }
+                }
+            }
+
+            // Обработка перехода по пригласительной ссылке ?startapp=room_123_PIN_BET
+            let startParam = (tg.initDataUnsafe && tg.initDataUnsafe.start_param) || '';
+            if (!startParam) {
+                const urlParams = new URLSearchParams(window.location.search);
+                startParam = urlParams.get('tgWebAppStartParam') || urlParams.get('startapp') || '';
+            }
+            if (startParam && startParam.startsWith('room_')) {
+                const parts = startParam.replace('room_', '').split('_');
+                const roomId = Number(parts[0]);
+                const roomPin = parts[1] && parts[1] !== 'open' ? parts[1] : '';
+
+                if (roomId) {
+                    setTimeout(() => {
+                        document.getElementById('join-room-code-input').value = roomId;
+                        document.getElementById('join-room-pin-input').value = roomPin;
+                        openModal('join-code');
+                        connectToFriendRoomByCode(roomId, roomPin);
+                    }, 500);
+                }
+            }
         }
 
-        window.onload = function() {
+        window.onload = function () {
             initTelegramMiniApp();
             updateAdminVisibilityUI();
-            updateHeaderAndHomeUI();
+            const today = new Date().toDateString();
+            if (STATE.lastRefillDate !== today) {
+                if (STATE.coins < ADMIN_CONFIG.dailyRefillLimit) {
+                    STATE.coins = ADMIN_CONFIG.dailyRefillLimit;
+                }
+                STATE.lastRefillDate = today;
+                saveProfile();
+            } else {
+                updateHeaderAndHomeUI();
+            }
+            renderCreateScreenControls();
             renderPublicSessions();
             renderPrivateSessions();
-            renderCreateScreenControls();
         };
     </script>
 </body>
