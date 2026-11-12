@@ -146,8 +146,8 @@
                     </div>
                 </div>
 
-                <!-- Кнопка Админ-панели -->
-                <button onclick="openModal('admin')" title="Админ-панель" class="px-2 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-[10px] font-black flex items-center gap-1 shrink-0 active:scale-95 transition">
+                <!-- Кнопка Админ-панели (СКРЫТА для всех, видна только владельцу!) -->
+                <button id="header-admin-btn" onclick="openAdminProtected()" title="Админ-панель" class="hidden px-2 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-[10px] font-black flex items-center gap-1 shrink-0 active:scale-95 transition">
                     <span>👑</span>
                     <span class="hidden sm:inline">Адм</span>
                 </button>
@@ -195,110 +195,23 @@
                     </button>
                 </div>
 
-                <!-- Главная кнопка: БЫСТРАЯ ИГРА -->
-                <button onclick="startQuickMatch()" class="w-full relative overflow-hidden rounded-3xl p-4 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-800 text-left shadow-xl shadow-emerald-950/60 border border-emerald-400/40 active:scale-[0.99] transition group">
-                    <div class="absolute -right-4 -bottom-5 text-7xl opacity-20 group-hover:scale-110 transition">🃏</div>
-                    <div class="relative z-10 flex items-center justify-between">
-                        <div>
-                            <span class="inline-block text-[10px] font-black uppercase tracking-wider bg-slate-950/40 text-emerald-200 px-2.5 py-0.5 rounded-full border border-emerald-300/20 mb-1.5">
-                                ⚡ Быстрый поиск стола
-                            </span>
-                            <div class="text-xl font-black text-white tracking-tight">Быстрая игра</div>
-                            <div class="text-xs text-emerald-100 font-medium mt-0.5">
-                                Ставка <b class="text-amber-300">100 – 150 🪙</b> • Колода 36 • Подкидной
-                            </div>
-                        </div>
-                        <div class="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-2xl shadow-inner border border-white/20">
-                            ▶️
-                        </div>
-                    </div>
-                </button>
-
-                <!-- Панель главных разделов -->
-                <div class="space-y-2.5">
-                    <!-- Инвентарь и Скины -->
-                    <button onclick="openModal('inventory')" class="w-full bg-slate-800/85 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3.5 flex items-center justify-between transition active:scale-[0.99]">
-                        <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-xl">
-                                🎒
-                            </div>
+                <!-- Нижняя строка: Промокод для друзей и Админка (Админка скрыта для обычных игроков) -->
+                <div id="home-bottom-grid" class="grid grid-cols-1 gap-2.5 pt-1">
+                    <button onclick="openModal('promo')" class="bg-slate-800/70 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3 flex items-center justify-between transition active:scale-95">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-lg">🎁</span>
                             <div class="text-left">
-                                <div class="text-sm font-black text-white">Инвентарь и Скины</div>
-                                <div class="text-[11px] text-slate-400">Ваши рубашки, колоды, сукно и витрина</div>
+                                <div class="text-xs font-black text-white">Активировать промокод</div>
+                                <div class="text-[10px] text-slate-400">Введите бонус-код для получения монет</div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span id="home-inv-count" class="text-[11px] font-bold bg-slate-900 text-indigo-300 px-2.5 py-1 rounded-xl border border-slate-700">3 предм.</span>
-                            <span class="text-slate-500 text-sm">❯</span>
-                        </div>
+                        <span class="text-slate-500 text-xs">❯</span>
                     </button>
 
-                    <!-- Магазин (Монеты, Звезды и Скины) -->
-                    <button onclick="openModal('shop')" class="w-full bg-slate-800/85 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3.5 flex items-center justify-between transition active:scale-[0.99]">
-                        <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-2xl bg-sky-500/20 border border-sky-500/30 flex items-center justify-center text-xl">
-                                🛍️
-                            </div>
-                            <div class="text-left">
-                                <div class="text-sm font-black text-white">Магазин скинов и Валюты</div>
-                                <div class="text-[11px] text-slate-400">Скины на карты, монеты 🪙 и Telegram Stars ⭐️</div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-[11px] font-bold bg-sky-500/15 text-sky-300 px-2.5 py-1 rounded-xl border border-sky-500/30">Скины ⭐️</span>
-                            <span class="text-slate-500 text-sm">❯</span>
-                        </div>
-                    </button>
-
-                    <!-- Достижения -->
-                    <button onclick="openModal('achievements')" class="w-full bg-slate-800/85 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3.5 flex items-center justify-between transition active:scale-[0.99]">
-                        <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-xl">
-                                🏆
-                            </div>
-                            <div class="text-left">
-                                <div class="text-sm font-black text-white">Достижения</div>
-                                <div class="text-[11px] text-slate-400">Испытания за столом и награды в монетах</div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span id="home-ach-count" class="text-[11px] font-bold bg-slate-900 text-amber-300 px-2.5 py-1 rounded-xl border border-slate-700">0 / 6</span>
-                            <span class="text-slate-500 text-sm">❯</span>
-                        </div>
-                    </button>
-
-                    <!-- Таблица лидеров -->
-                    <button onclick="openModal('leaderboard')" class="w-full bg-slate-800/85 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3.5 flex items-center justify-between transition active:scale-[0.99]">
-                        <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xl">
-                                📊
-                            </div>
-                            <div class="text-left">
-                                <div class="text-sm font-black text-white">Таблица лидеров (Топ-100)</div>
-                                <div class="text-[11px] text-slate-400">Сезон 3 месяца • По рейтингу и выигрышу</div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-[10px] font-bold bg-emerald-500/15 text-emerald-300 px-2 py-1 rounded-xl border border-emerald-500/30">Сезон #1</span>
-                            <span class="text-slate-500 text-sm">❯</span>
-                        </div>
-                    </button>
-                </div>
-
-                <!-- Нижняя строка: Промокод для друзей и Админка -->
-                <div class="grid grid-cols-2 gap-2.5 pt-1">
-                    <button onclick="openModal('promo')" class="bg-slate-800/70 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3 flex items-center gap-2.5 transition active:scale-95">
-                        <span class="text-lg">🎁</span>
-                        <div class="text-left">
-                            <div class="text-xs font-black text-white">Промокод</div>
-                            <div class="text-[10px] text-slate-400">Бонус для друзей</div>
-                        </div>
-                    </button>
-
-                    <button onclick="openModal('admin')" class="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-2xl p-3 flex items-center gap-2.5 transition active:scale-95">
+                    <button id="home-admin-btn" onclick="openAdminProtected()" class="hidden bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-2xl p-3 flex items-center gap-2.5 transition active:scale-95">
                         <span class="text-lg">👑</span>
                         <div class="text-left">
-                            <div class="text-xs font-black text-rose-300">Админ-панель</div>
+                            <div class="text-xs font-black text-rose-300">Админ-панель (Только владелец)</div>
                             <div class="text-[10px] text-rose-200/70">Управление игрой</div>
                         </div>
                     </button>
@@ -798,9 +711,23 @@
             botUsername: 'durak_online_bot',
             dailyRefillLimit: 1500,
             rakePercent: 5,
-            totalGamesPlayed: 142,
-            totalStarsDonated: 1850
+            totalGamesPlayed: 0,
+            totalStarsDonated: 0,
+            // Список разрешенных Telegram ID и ников владельца + секретный PIN
+            ownerTelegramIds: [],
+            ownerNames: ['FRG Admin', 'wiaral', 'Wiaral'],
+            adminPin: '7777'
         };
+
+        // Текущий Telegram-пользователь
+        let CURRENT_TG_USER = {
+            id: 'local_guest',
+            name: 'Игрок #1',
+            username: ''
+        };
+
+        let adminAvatarTapCount = 0;
+        let adminUnlockedInSession = false;
 
         let PROMO_CODES = [
             { code: 'TEST2026', coins: 5000, stars: 50, usesLeft: 99 },
@@ -809,18 +736,14 @@
         ];
 
         let MOCK_USERS_DB = [
-            { id: 101, name: 'Вы (Игрок #1)', rp: 120, coins: 1500, banned: false, isSelf: true },
-            { id: 102, name: 'Дмитрий_ТГ', rp: 1450, coins: 28400, banned: false, isSelf: false },
-            { id: 103, name: 'Козырной_Туз', rp: 3120, coins: 420000, banned: false, isSelf: false },
-            { id: 104, name: 'Шулер_99', rp: 890, coins: 6200, banned: false, isSelf: false },
-            { id: 105, name: 'Алина_Старс', rp: 2150, coins: 95000, banned: false, isSelf: false }
+            { id: 101, name: 'Вы (Владелец)', rp: 120, coins: 1500, banned: false, isSelf: true }
         ];
 
         const DEFAULT_STATE = {
             coins: 1500,
             stars: 50,
             rp: 120,
-            totalWonCoins: 3450,
+            totalWonCoins: 0,
             ownedSkins: ['back-classic', 'face-classic', 'felt-emerald'],
             equipped: {
                 back: 'back-classic',
@@ -832,6 +755,24 @@
             lastRefillDate: new Date().toDateString()
         };
 
+        // Загрузка настроек админки
+        try {
+            const savedAdm = localStorage.getItem('durak_tma_admin_cfg_v2');
+            if (savedAdm) {
+                ADMIN_CONFIG = { ...ADMIN_CONFIG, ...JSON.parse(savedAdm) };
+            }
+        } catch (e) {}
+
+        function saveAdminConfigStorage() {
+            try {
+                localStorage.setItem('durak_tma_admin_cfg_v2', JSON.stringify(ADMIN_CONFIG));
+            } catch (e) {}
+        }
+
+        function getStorageKeyForCurrentUser() {
+            return `durak_tma_user_${CURRENT_TG_USER.id || 'guest'}`;
+        }
+
         let STATE = loadProfile();
         let currentInventoryTab = 'owned';
         let currentLeaderboardTab = 'rp';
@@ -840,7 +781,7 @@
 
         function loadProfile() {
             try {
-                const raw = localStorage.getItem('durak_tma_release_v1');
+                const raw = localStorage.getItem(getStorageKeyForCurrentUser());
                 if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
                 const parsed = JSON.parse(raw);
                 return {
@@ -853,6 +794,63 @@
             } catch (e) {
                 return JSON.parse(JSON.stringify(DEFAULT_STATE));
             }
+        }
+
+        function saveProfile() {
+            const selfUser = MOCK_USERS_DB.find(u => u.isSelf);
+            if (selfUser) {
+                selfUser.coins = STATE.coins;
+                selfUser.rp = STATE.rp;
+            }
+            const serialized = JSON.stringify(STATE);
+            try {
+                localStorage.setItem(getStorageKeyForCurrentUser(), serialized);
+            } catch (e) {}
+            // Также сохраняем в облако Telegram CloudStorage (чтобы прогресс не терялся между устройствами!)
+            try {
+                const cs = window.Telegram?.WebApp?.CloudStorage;
+                if (cs && typeof cs.setItem === 'function') {
+                    cs.setItem('durak_profile_v2', serialized);
+                }
+            } catch (e) {}
+            updateHeaderAndHomeUI();
+        }
+
+        // Проверка: является ли текущий аккаунт владельцем (админом)
+        function isCurrentUserAdmin() {
+            if (adminUnlockedInSession) return true;
+            const uidStr = String(CURRENT_TG_USER.id || '');
+            if (uidStr && ADMIN_CONFIG.ownerTelegramIds.map(String).includes(uidStr)) {
+                return true;
+            }
+            const uname = (CURRENT_TG_USER.username || '').toLowerCase();
+            const dname = (CURRENT_TG_USER.name || '').toLowerCase();
+            return ADMIN_CONFIG.ownerNames.some(n => {
+                const target = n.toLowerCase();
+                return target === uname || target === dname;
+            });
+        }
+
+        function updateAdminVisibilityUI() {
+            const isAdmin = isCurrentUserAdmin();
+            const headerBtn = document.getElementById('header-admin-btn');
+            const homeBtn = document.getElementById('home-admin-btn');
+            const bottomGrid = document.getElementById('home-bottom-grid');
+
+            if (headerBtn) headerBtn.classList.toggle('hidden', !isAdmin);
+            if (homeBtn) homeBtn.classList.toggle('hidden', !isAdmin);
+            if (bottomGrid) {
+                bottomGrid.className = isAdmin ? 'grid grid-cols-2 gap-2.5 pt-1' : 'grid grid-cols-1 gap-2.5 pt-1';
+            }
+        }
+
+        function openAdminProtected() {
+            if (!isCurrentUserAdmin()) {
+                showToast('⛔ Доступ запрещен: только для владельца игры');
+                return;
+            }
+            openModal('admin');
+        }
         }
 
         function saveProfile() {
@@ -945,17 +943,34 @@
             if (screen === 'create') renderCreateScreenControls();
         }
 
-        let ALL_SESSIONS = [
-            { id: 101, title: 'Быстрый стол #101', host: 'Волк_С_ТГ', avatar: '🐺', rank: 'Золото', bet: 100, maxPlayers: 2, curPlayers: 1, deckSize: 36, mode: 'podkidnoy', cheating: false, allowDraw: false, throwRule: 'neighbors', isPrivate: false },
-            { id: 102, title: 'Клуб Шулеров 🎭', host: 'Ловкач_777', avatar: '🎭', rank: 'Платина', bet: 250, maxPlayers: 2, curPlayers: 1, deckSize: 36, mode: 'perevodnoy', cheating: true, allowDraw: true, throwRule: 'all', isPrivate: false },
-            { id: 103, title: 'Стол на четверых', host: 'Катана', avatar: '🥷', rank: 'Серебро', bet: 500, maxPlayers: 4, curPlayers: 3, deckSize: 36, mode: 'podkidnoy', cheating: false, allowDraw: false, throwRule: 'neighbors', isPrivate: false },
-            { id: 104, title: 'Блиц 24 карты', host: 'Молния', avatar: '⚡', rank: 'Золото', bet: 150, maxPlayers: 2, curPlayers: 1, deckSize: 24, mode: 'podkidnoy', cheating: false, allowDraw: true, throwRule: 'neighbors', isPrivate: false },
-            { id: 105, title: 'Королевский 52', host: 'Император', avatar: '👑', rank: 'Мастер', bet: 5000, maxPlayers: 6, curPlayers: 5, deckSize: 52, mode: 'perevodnoy', cheating: true, allowDraw: false, throwRule: 'all', isPrivate: false },
-            { id: 106, title: 'Хайролл Олимп', host: 'Миллионер', avatar: '💎', rank: 'Гроссмейстер', bet: 100000, maxPlayers: 2, curPlayers: 1, deckSize: 36, mode: 'podkidnoy', cheating: false, allowDraw: false, throwRule: 'neighbors', isPrivate: false },
-            // Приватные столы
-            { id: 201, title: 'Для своих из чата', host: 'Дмитрий_ТГ', avatar: '🦊', rank: 'Золото', bet: 250, maxPlayers: 2, curPlayers: 1, deckSize: 36, mode: 'podkidnoy', cheating: false, allowDraw: false, throwRule: 'neighbors', isPrivate: true, password: '1234' },
-            { id: 202, title: 'Ночной приват с шулером', host: 'Виктор_К', avatar: '🦅', rank: 'Алмаз', bet: 1000, maxPlayers: 4, curPlayers: 3, deckSize: 36, mode: 'perevodnoy', cheating: true, allowDraw: true, throwRule: 'all', isPrivate: true, password: '7777' }
-        ];
+        // ТОЛЬКО ЖИВЫЕ ЛОББИ ИГРОКОВ (никаких ботовских комнат!)
+        let ALL_SESSIONS = loadLiveSessions();
+
+        function loadLiveSessions() {
+            try {
+                const raw = localStorage.getItem('durak_tma_live_rooms_v2');
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveLiveSessions() {
+            try {
+                localStorage.setItem('durak_tma_live_rooms_v2', JSON.stringify(ALL_SESSIONS));
+            } catch (e) {}
+        }
+
+        // Синхронизация живых комнат между вкладками/окнами в реальном времени
+        window.addEventListener('storage', (evt) => {
+            if (evt.key === 'durak_tma_live_rooms_v2') {
+                ALL_SESSIONS = loadLiveSessions();
+                renderPublicSessions();
+                renderPrivateSessions();
+            }
+        });
 
         let GAME_FILTERS = {
             minBet: 100,
@@ -993,15 +1008,19 @@
             });
 
             document.getElementById('games-filter-summary').textContent =
-                `Ставка ${formatCompactNumber(GAME_FILTERS.minBet)}–${formatCompactNumber(GAME_FILTERS.maxBet)} 🪙 • Найдено: ${filtered.length}`;
+                `Живых столов: ${filtered.length} • Ставка ${formatCompactNumber(GAME_FILTERS.minBet)}–${formatCompactNumber(GAME_FILTERS.maxBet)} 🪙`;
 
             if (filtered.length === 0) {
                 container.innerHTML = `
-                    <div class="bg-slate-800/60 border border-slate-700/70 rounded-2xl p-6 text-center space-y-2 my-4">
-                        <div class="text-3xl">🔍</div>
-                        <div class="text-xs font-bold text-white">Столов с такими фильтрами пока нет</div>
-                        <p class="text-[11px] text-slate-400">Сбросьте фильтры или создайте свой стол с этими правилами</p>
-                        <button onclick="resetGameFilters()" class="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">Сбросить фильтры</button>
+                    <div class="bg-slate-800/60 border border-slate-700/70 rounded-2xl p-6 text-center space-y-2.5 my-4">
+                        <div class="text-3xl">🃏</div>
+                        <div class="text-xs font-black text-white">Сейчас нет открытых столов</div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed">
+                            Здесь отображаются только живые лобби реальных игроков. Создайте свой стол и отправьте приглашение другу в Telegram!
+                        </p>
+                        <button onclick="switchScreen('create')" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs active:scale-95 transition">
+                            ➕ Создать живой стол
+                        </button>
                     </div>`;
                 return;
             }
@@ -1034,6 +1053,20 @@
         function renderPrivateSessions() {
             const container = document.getElementById('private-sessions-list');
             const privates = ALL_SESSIONS.filter(s => s.isPrivate);
+            if (privates.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-slate-800/60 border border-indigo-500/30 rounded-2xl p-6 text-center space-y-2.5 my-4">
+                        <div class="text-3xl">🔒</div>
+                        <div class="text-xs font-black text-white">Нет активных приватных комнат</div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed">
+                            Создайте приватное лобби с PIN-паролем и отправьте прямую ссылку другу в Telegram.
+                        </p>
+                        <button onclick="openCreateWithPrivatePreset()" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-black text-xs active:scale-95 transition">
+                            + Создать приватный стол
+                        </button>
+                    </div>`;
+                return;
+            }
             container.innerHTML = privates.map(s => `
                 <div class="bg-slate-800/85 border border-indigo-500/30 rounded-2xl p-3 space-y-2">
                     <div class="flex items-center justify-between">
@@ -1041,7 +1074,7 @@
                             <div class="w-10 h-10 rounded-xl bg-indigo-950/80 border border-indigo-500/40 flex items-center justify-center text-lg">🔒</div>
                             <div>
                                 <div class="text-xs font-black text-white">${s.title}</div>
-                                <div class="text-[10px] text-slate-400">Создатель: ${s.host} • PIN для теста: <b class="text-amber-300">${s.password}</b></div>
+                                <div class="text-[10px] text-slate-400">Создатель: ${s.host} • Вход по PIN-коду</div>
                             </div>
                         </div>
                         <div class="text-right">
@@ -1226,7 +1259,7 @@
             const newRoom = {
                 id: Math.floor(300 + Math.random() * 600),
                 title: titleInput || (CREATE_FORM.isPrivate ? 'Приват для друзей' : `Стол #${Math.floor(100 + Math.random() * 899)}`),
-                host: 'Вы',
+                host: CURRENT_TG_USER.name || 'Игрок',
                 avatar: '😎',
                 rank: getRankObject(STATE.rp).name,
                 bet: CREATE_FORM.bet,
@@ -1241,6 +1274,7 @@
                 password: passInput
             };
             ALL_SESSIONS.unshift(newRoom);
+            saveLiveSessions();
             activeWaitingRoom = newRoom;
 
             document.getElementById('wait-room-title').textContent = newRoom.title;
@@ -1264,7 +1298,16 @@
         function shareTelegramInvite() {
             if (!activeWaitingRoom) return;
             const botUser = ADMIN_CONFIG.botUsername || 'durak_online_bot';
-            const startParam = `room_${activeWaitingRoom.id}_${activeWaitingRoom.isPrivate ? activeWaitingRoom.password : 'open'}`;
+            // Кодируем параметры комнаты прямо в ссылку, чтобы друг с другого телефона увидел именно этот стол!
+            const roomPayload = [
+                activeWaitingRoom.id,
+                activeWaitingRoom.bet,
+                activeWaitingRoom.deckSize,
+                activeWaitingRoom.mode === 'perevodnoy' ? 'per' : 'pod',
+                activeWaitingRoom.cheating ? '1' : '0',
+                activeWaitingRoom.isPrivate ? activeWaitingRoom.password : 'open'
+            ].join('_');
+            const startParam = `room_${roomPayload}`;
             const miniAppUrl = `https://t.me/${botUser}?startapp=${startParam}`;
             const passText = activeWaitingRoom.isPrivate ? ` (PIN-пароль: ${activeWaitingRoom.password})` : '';
             const inviteText = `🃏 Заходи ко мне за стол в «Дурак Онлайн»! Комната #${activeWaitingRoom.id}${passText}, ставка ${formatCompactNumber(activeWaitingRoom.bet)} 🪙, колода ${activeWaitingRoom.deckSize} карт!`;
@@ -1277,15 +1320,24 @@
             } else {
                 window.open(shareUrl, '_blank');
             }
-            showToast('✈️ Выбор чата открыт в Telegram!');
+            showToast('✈️ Приглашение отправлено в Telegram!');
         }
 
         function copyRoomInviteLink() {
             if (!activeWaitingRoom) return;
-            const passText = activeWaitingRoom.isPrivate ? ` | Пароль: ${activeWaitingRoom.password}` : '';
-            const link = `https://t.me/durak_online_bot/app?startapp=room_${activeWaitingRoom.id}${passText}`;
+            const botUser = ADMIN_CONFIG.botUsername || 'durak_online_bot';
+            const roomPayload = [
+                activeWaitingRoom.id,
+                activeWaitingRoom.bet,
+                activeWaitingRoom.deckSize,
+                activeWaitingRoom.mode === 'perevodnoy' ? 'per' : 'pod',
+                activeWaitingRoom.cheating ? '1' : '0',
+                activeWaitingRoom.isPrivate ? activeWaitingRoom.password : 'open'
+            ].join('_');
+            const passText = activeWaitingRoom.isPrivate ? ` (PIN: ${activeWaitingRoom.password})` : '';
+            const link = `https://t.me/${botUser}?startapp=room_${roomPayload}${passText}`;
             copyTextToClipboard(link);
-            showToast('🔗 Ссылка и PIN скопированы!');
+            showToast('🔗 Инвайт-ссылка скопирована!');
         }
 
         function startWaitingRoomNow() {
@@ -1299,7 +1351,7 @@
             const room = ALL_SESSIONS.find(s => s.id === id);
             if (!room) return;
             pendingPrivateRoomId = id;
-            document.getElementById('pass-modal-room').textContent = `${room.title} • Ставка ${formatCompactNumber(room.bet)} 🪙 (подсказка для теста: ${room.password})`;
+            document.getElementById('pass-modal-room').textContent = `${room.title} • Создатель: ${room.host} • Ставка ${formatCompactNumber(room.bet)} 🪙`;
             document.getElementById('pass-modal-input').value = '';
             openModal('password');
         }
@@ -2489,27 +2541,27 @@
             if (currentAdminTab === 'dash') {
                 body.innerHTML = `
                     <!-- Метрики -->
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-2.5 text-center">
-                            <div class="text-[10px] text-slate-400 font-bold">Игроков в БД</div>
-                            <div class="text-sm font-black text-white mt-0.5">${MOCK_USERS_DB.length}</div>
-                        </div>
-                        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-2.5 text-center">
-                            <div class="text-[10px] text-slate-400 font-bold">Активных столов</div>
-                            <div class="text-sm font-black text-emerald-400 mt-0.5">${ALL_SESSIONS.length}</div>
-                        </div>
-                        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-2.5 text-center">
-                            <div class="text-[10px] text-slate-400 font-bold">Донат Stars</div>
-                            <div class="text-sm font-black text-sky-400 mt-0.5">${ADMIN_CONFIG.totalStarsDonated} ⭐️</div>
-                        </div>
-                    </div>
-
-                    <!-- Настройки экономики -->
+                    <!-- Настройки экономики и Доступа Владельца -->
                     <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-3 space-y-3">
-                        <div class="text-xs font-black text-white">⚙️ Настройки экономики и Бота Telegram</div>
-                        <div>
-                            <label class="text-[10px] text-slate-400 font-bold block mb-1">Username вашего бота (без @, для инвайт-ссылок)</label>
-                            <input id="adm-bot-username" type="text" value="${ADMIN_CONFIG.botUsername || 'durak_online_bot'}" placeholder="durak_online_bot" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black text-sky-400">
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs font-black text-white">🔒 Доступ к Админке и Настройки</div>
+                            <span class="text-[10px] font-bold text-emerald-400">Ваш ID: ${CURRENT_TG_USER.id}</span>
+                        </div>
+                        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 text-[10px] text-slate-300 space-y-1.5">
+                            <div>Админка скрыта от других аккаунтов. Привяжите ваш текущий Telegram ID (<b>${CURRENT_TG_USER.id}</b>), чтобы кнопка «👑 Адм» была видна только вам:</div>
+                            <button onclick="bindMyTelegramIdAsOwner()" class="w-full py-1.5 rounded-lg bg-rose-500 hover:bg-rose-400 text-white font-black text-[11px]">
+                                📌 Закрепить админку только за моим аккаунтом (${CURRENT_TG_USER.name})
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] text-slate-400 font-bold block mb-1">Username бота (без @)</label>
+                                <input id="adm-bot-username" type="text" value="${ADMIN_CONFIG.botUsername || 'durak_online_bot'}" placeholder="durak_online_bot" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black text-sky-400">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 font-bold block mb-1">Секретный PIN админа</label>
+                                <input id="adm-secret-pin" type="text" value="${ADMIN_CONFIG.adminPin || '7777'}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black text-rose-400">
+                            </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2.5">
                             <div>
@@ -2673,14 +2725,28 @@
             const refillVal = parseInt(document.getElementById('adm-refill-input').value, 10);
             const rakeVal = parseInt(document.getElementById('adm-rake-input').value, 10);
             const botUserEl = document.getElementById('adm-bot-username');
+            const pinEl = document.getElementById('adm-secret-pin');
             if (botUserEl && botUserEl.value.trim()) {
                 ADMIN_CONFIG.botUsername = botUserEl.value.trim().replace(/^@/, '');
             }
+            if (pinEl && pinEl.value.trim()) {
+                ADMIN_CONFIG.adminPin = pinEl.value.trim();
+            }
             if (!isNaN(refillVal) && refillVal >= 100) ADMIN_CONFIG.dailyRefillLimit = refillVal;
             if (!isNaN(rakeVal) && rakeVal >= 0 && rakeVal <= 30) ADMIN_CONFIG.rakePercent = rakeVal;
+            saveAdminConfigStorage();
             saveProfile();
             renderAdminModal();
-            showToast(`✅ Сохранено! Бот: @${ADMIN_CONFIG.botUsername}, долив до ${ADMIN_CONFIG.dailyRefillLimit} 🪙`);
+            showToast(`✅ Сохранено! Бот: @${ADMIN_CONFIG.botUsername}`);
+        }
+
+        function bindMyTelegramIdAsOwner() {
+            ADMIN_CONFIG.ownerTelegramIds = [String(CURRENT_TG_USER.id)];
+            ADMIN_CONFIG.ownerNames = [CURRENT_TG_USER.name, CURRENT_TG_USER.username].filter(Boolean);
+            saveAdminConfigStorage();
+            updateAdminVisibilityUI();
+            renderAdminModal();
+            showToast(`👑 Админка закреплена строго за аккаунтом ${CURRENT_TG_USER.name} (ID: ${CURRENT_TG_USER.id})!`);
         }
 
         function adminGiveSelfCurrency(coins, stars) {
@@ -2752,6 +2818,7 @@
 
         function adminDeleteSession(sessionId) {
             ALL_SESSIONS = ALL_SESSIONS.filter(s => s.id !== sessionId);
+            saveLiveSessions();
             renderAdminModal();
             renderPublicSessions();
             renderPrivateSessions();
@@ -2806,6 +2873,36 @@
                 const user = tg.initDataUnsafe?.user;
                 if (user) {
                     const displayName = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || `Игрок #${user.id}`;
+                    CURRENT_TG_USER = {
+                        id: String(user.id),
+                        name: displayName,
+                        username: user.username || ''
+                    };
+                    // Перезагружаем личный профиль именно для этого Telegram ID
+                    STATE = loadProfile();
+
+                    // Подгружаем облачное сохранение из Telegram CloudStorage, если оно есть
+                    try {
+                        const cs = tg.CloudStorage;
+                        if (cs && typeof cs.getItem === 'function') {
+                            cs.getItem('durak_profile_v2', (err, cloudVal) => {
+                                if (!err && cloudVal) {
+                                    try {
+                                        const parsedCloud = JSON.parse(cloudVal);
+                                        STATE = {
+                                            ...DEFAULT_STATE,
+                                            ...parsedCloud,
+                                            equipped: { ...DEFAULT_STATE.equipped, ...(parsedCloud.equipped || {}) },
+                                            achievements: { ...(parsedCloud.achievements || {}) },
+                                            usedPromos: parsedCloud.usedPromos || []
+                                        };
+                                        updateHeaderAndHomeUI();
+                                    } catch (e) {}
+                                }
+                            });
+                        }
+                    } catch (e) {}
+
                     const nameEl = document.getElementById('header-user-name');
                     if (nameEl) nameEl.textContent = displayName;
 
@@ -2823,39 +2920,53 @@
                     }
                 }
 
+                // Переход по приглашению друга (room_ID_BET_DECK_MODE_CHEAT_PASS)
                 const startParam = tg.initDataUnsafe?.start_param;
                 if (startParam && startParam.startsWith('room_')) {
                     const parts = startParam.split('_');
                     const roomId = parseInt(parts[1], 10);
+                    const betVal = parseInt(parts[2], 10) || 250;
+                    const deckVal = parseInt(parts[3], 10) || 36;
+                    const modeVal = parts[4] === 'per' ? 'perevodnoy' : 'podkidnoy';
+                    const cheatVal = parts[5] === '1';
+                    const passVal = parts[6] && parts[6] !== 'open' ? parts[6] : null;
+
                     if (!isNaN(roomId)) {
+                        let invitedRoom = ALL_SESSIONS.find(s => s.id === roomId);
+                        if (!invitedRoom) {
+                            invitedRoom = {
+                                id: roomId,
+                                title: `Стол друга #${roomId}`,
+                                host: 'Друг из Telegram',
+                                avatar: '🦊',
+                                rank: 'Золото',
+                                bet: betVal,
+                                maxPlayers: 2,
+                                curPlayers: 1,
+                                deckSize: deckVal,
+                                mode: modeVal,
+                                cheating: cheatVal,
+                                allowDraw: false,
+                                throwRule: 'neighbors',
+                                isPrivate: !!passVal,
+                                password: passVal || '7777'
+                            };
+                            ALL_SESSIONS.unshift(invitedRoom);
+                            saveLiveSessions();
+                        }
                         setTimeout(() => {
-                            showToast(`🔗 Переход по приглашению в комнату #${roomId}...`);
-                            const existing = ALL_SESSIONS.find(s => s.id === roomId);
-                            if (existing) {
-                                startNewGame(existing);
-                            } else {
-                                startNewGame({
-                                    id: roomId,
-                                    title: `Стол друга #${roomId}`,
-                                    host: 'Друг_из_Telegram',
-                                    avatar: '🦊',
-                                    rank: 'Золото',
-                                    bet: 250,
-                                    deckSize: 36,
-                                    mode: 'podkidnoy',
-                                    cheating: false,
-                                    allowDraw: false,
-                                    throwRule: 'neighbors'
-                                });
-                            }
+                            showToast(`🔗 Подключение к столу друга #${roomId}...`);
+                            startNewGame(invitedRoom);
                         }, 400);
                     }
                 }
             } catch (e) {}
+            updateAdminVisibilityUI();
         }
 
         window.onload = function() {
             initTelegramMiniApp();
+            updateAdminVisibilityUI();
             updateHeaderAndHomeUI();
             renderPublicSessions();
             renderPrivateSessions();
