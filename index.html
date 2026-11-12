@@ -1,4 +1,5 @@
-<!-- ... existing code ... -->
+<!DOCTYPE html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -8,7 +9,123 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-<!-- ... existing code ... -->
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #090d16;
+            color: #f8fafc;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        /* Стили игрового сукна */
+        .felt-emerald {
+            background: radial-gradient(circle at 50% 42%, #15803d 0%, #166534 55%, #052e16 100%);
+        }
+        .felt-royal {
+            background: radial-gradient(circle at 50% 42%, #1d4ed8 0%, #1e3a8a 58%, #091536 100%);
+        }
+        .felt-crimson {
+            background: radial-gradient(circle at 50% 42%, #b91c1c 0%, #7f1d1d 58%, #2a0707 100%);
+        }
+        .felt-cyber {
+            background: radial-gradient(circle at 50% 42%, #6d28d9 0%, #3b0764 58%, #130326 100%);
+        }
+        /* Рубашки карт */
+        .back-classic {
+            background: repeating-linear-gradient(45deg, #1d4ed8, #1d4ed8 6px, #1e40af 6px, #1e40af 12px);
+            border: 2px solid #eff6ff;
+        }
+        .back-gold {
+            background: linear-gradient(135deg, #f59e0b 0%, #fef08a 50%, #b45309 100%);
+            border: 2px solid #fffbeb;
+        }
+        .back-neon {
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #06b6d4 100%);
+            border: 2px solid #f0abfc;
+        }
+        .back-ruby {
+            background: radial-gradient(circle, #f43f5e 0%, #881337 100%);
+            border: 2px solid #fecdd3;
+        }
+        /* Лица карт */
+        .face-classic {
+            background: #ffffff;
+            color: #0f172a;
+            border: 1.5px solid #cbd5e1;
+        }
+        .face-dark {
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1.5px solid #475569;
+        }
+        .face-gold {
+            background: linear-gradient(160deg, #fffbeb 0%, #fde68a 100%);
+            color: #451a03;
+            border: 1.5px solid #f59e0b;
+        }
+        /* Карты в веере игрока (GPU-ускорение) */
+        .hand-fan-card {
+            position: absolute;
+            width: 68px;
+            height: 98px;
+            border-radius: 11px;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+            transform-origin: 50% 125%;
+            transition: transform 0.18s cubic-bezier(0.2, 0.85, 0.3, 1);
+            will-change: transform;
+            backface-visibility: hidden;
+            cursor: pointer;
+        }
+        .hand-fan-card.playable-card {
+            box-shadow: 0 8px 18px rgba(16, 185, 129, 0.4), 0 0 0 2px #34d399;
+        }
+        .hand-fan-card.cheat-card {
+            box-shadow: 0 6px 14px rgba(244, 63, 94, 0.3), 0 0 0 1.5px rgba(251, 113, 133, 0.65);
+        }
+        .hand-fan-card:hover, .hand-fan-card:active {
+            z-index: 90 !important;
+        }
+        /* Летящая карта при раздаче/ходе */
+        .flying-card {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 66px;
+            height: 94px;
+            border-radius: 10px;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 10px 22px rgba(0,0,0,0.45);
+            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
+            will-change: transform, opacity;
+            backface-visibility: hidden;
+        }
+        @keyframes floatEmoji {
+            0% { transform: translateY(12px) scale(0.4); opacity: 0; }
+            20% { transform: translateY(0px) scale(1.15); opacity: 1; }
+            80% { transform: translateY(-8px) scale(1); opacity: 1; }
+            100% { transform: translateY(-22px) scale(0.8); opacity: 0; }
+        }
+        .emoji-pop {
+            animation: floatEmoji 2.1s ease-out forwards;
+        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+    </style>
+</head>
+<body class="h-screen w-screen flex justify-center bg-slate-950">
+
+    <!-- Слой для плавной GPU-анимации перелета карт -->
+    <div id="flying-layer" class="fixed inset-0 pointer-events-none z-[9999] overflow-hidden"></div>
+
+    <!-- Контейнер Telegram Mini App -->
+    <div class="w-full max-w-md h-full flex flex-col bg-slate-900 relative overflow-hidden shadow-2xl border-x border-slate-800/80">
+
         <!-- ================= ВЕРХНЯЯ ШАПКА: СЛЕВА АВАТАРКА + АДМИНКА, СПРАВА ВАЛЮТА ================= -->
         <header class="px-3 py-2 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 flex items-center justify-between gap-1.5 z-30 shrink-0">
             <!-- Слева: Аватарка, Ник, Ранг + Кнопка Админки -->
@@ -30,9 +147,2365 @@
                 </div>
 
                 <!-- Кнопка Админ-панели -->
-<!-- ... existing code ... -->
+                <button onclick="openModal('admin')" title="Админ-панель" class="px-2 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-[10px] font-black flex items-center gap-1 shrink-0 active:scale-95 transition">
+                    <span>👑</span>
+                    <span class="hidden sm:inline">Адм</span>
+                </button>
+            </div>
+
+            <!-- Справа: Игровая и Покупная валюта -->
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="openModal('shop')" class="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 px-2 py-1.5 rounded-xl border border-amber-500/30 transition active:scale-95">
+                    <span class="text-xs">🪙</span>
+                    <span id="header-coins" class="text-xs font-extrabold text-amber-400">1 500</span>
+                    <span class="w-4 h-4 rounded-md bg-amber-500/20 text-amber-300 text-[10px] flex items-center justify-center font-black">+</span>
+                </button>
+
+                <button onclick="openModal('shop')" class="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 px-2 py-1.5 rounded-xl border border-sky-500/30 transition active:scale-95">
+                    <span class="text-xs">⭐️</span>
+                    <span id="header-stars" class="text-xs font-extrabold text-sky-400">50</span>
+                    <span class="w-4 h-4 rounded-md bg-sky-500/20 text-sky-300 text-[10px] flex items-center justify-center font-black">+</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Тост-уведомления -->
+        <div id="toast-box" class="fixed top-14 left-1/2 -translate-x-1/2 z-[120] pointer-events-none transition-all duration-300 opacity-0 -translate-y-2 w-[90%] max-w-xs">
+            <div id="toast-text" class="bg-slate-900/95 text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-2xl border border-slate-700 text-center"></div>
+        </div>
+
+        <!-- ================= ОСНОВНАЯ ОБЛАСТЬ ЭКРАНОВ ================= -->
+        <main class="flex-1 relative overflow-hidden flex flex-col">
+
+            <!-- ЭКРАН 1: ГЛАВНАЯ -->
+            <section id="screen-home" class="flex-1 overflow-y-auto p-3.5 space-y-3">
+                <!-- Плашка ежедневного авто-пополнения до 1500 -->
+                <div class="bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-slate-800/90 border border-amber-500/30 rounded-2xl p-3 flex items-center justify-between gap-2">
+                    <div class="space-y-0.5">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs">🎁</span>
+                            <span class="text-xs font-extrabold text-amber-300">Ежедневный бонус</span>
+                        </div>
+                        <p class="text-[11px] text-slate-300 leading-tight">
+                            Раз в сутки баланс бесплатно пополняется до <b class="text-white"><span id="home-refill-limit">1 500</span> 🪙</b>, если у вас меньше.
+                        </p>
+                    </div>
+                    <button onclick="claimDailyRefill()" class="shrink-0 px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[11px] shadow-md active:scale-95 transition">
+                        Забрать
+                    </button>
+                </div>
+
+                <!-- Главная кнопка: БЫСТРАЯ ИГРА -->
+                <button onclick="startQuickMatch()" class="w-full relative overflow-hidden rounded-3xl p-4 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-800 text-left shadow-xl shadow-emerald-950/60 border border-emerald-400/40 active:scale-[0.99] transition group">
+                    <div class="absolute -right-4 -bottom-5 text-7xl opacity-20 group-hover:scale-110 transition">🃏</div>
+                    <div class="relative z-10 flex items-center justify-between">
+                        <div>
+                            <span class="inline-block text-[10px] font-black uppercase tracking-wider bg-slate-950/40 text-emerald-200 px-2.5 py-0.5 rounded-full border border-emerald-300/20 mb-1.5">
+                                ⚡ Быстрый поиск стола
+                            </span>
+                            <div class="text-xl font-black text-white tracking-tight">Быстрая игра</div>
+                            <div class="text-xs text-emerald-100 font-medium mt-0.5">
+                                Ставка <b class="text-amber-300">100 – 150 🪙</b> • Колода 36 • Подкидной
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-2xl shadow-inner border border-white/20">
+                            ▶️
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Панель главных разделов -->
+                <div class="space-y-2.5">
+                    <!-- Инвентарь и Скины -->
+                    <button onclick="openModal('inventory')" class="w-full bg-slate-800/85 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3.5 flex items-center justify-between transition active:scale-[0.99]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-xl">
+                                🎒
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-black text-white">Инвентарь и Скины</div>
+                                <div class="text-[11px] text-slate-400">Ваши рубашки, колоды, сукно и витрина</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="home-inv-count" class="text-[11px] font-bold bg-slate-900 text-indigo-300 px-2.5 py-1 rounded-xl border border-slate-700">3 предм.</span>
+                            <span class="text-slate-500 text-sm">❯</span>
+                        </div>
+                    </button>
+
+                    <!-- Магазин (Монеты, Звезды и Скины) -->
+                    <button onclick="openModal('shop')" class="w-full bg-slate-800/85 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3.5 flex items-center justify-between transition active:scale-[0.99]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-2xl bg-sky-500/20 border border-sky-500/30 flex items-center justify-center text-xl">
+                                🛍️
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-black text-white">Магазин скинов и Валюты</div>
+                                <div class="text-[11px] text-slate-400">Скины на карты, монеты 🪙 и Telegram Stars ⭐️</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] font-bold bg-sky-500/15 text-sky-300 px-2.5 py-1 rounded-xl border border-sky-500/30">Скины ⭐️</span>
+                            <span class="text-slate-500 text-sm">❯</span>
+                        </div>
+                    </button>
+
+                    <!-- Достижения -->
+                    <button onclick="openModal('achievements')" class="w-full bg-slate-800/85 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3.5 flex items-center justify-between transition active:scale-[0.99]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-xl">
+                                🏆
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-black text-white">Достижения</div>
+                                <div class="text-[11px] text-slate-400">Испытания за столом и награды в монетах</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="home-ach-count" class="text-[11px] font-bold bg-slate-900 text-amber-300 px-2.5 py-1 rounded-xl border border-slate-700">0 / 6</span>
+                            <span class="text-slate-500 text-sm">❯</span>
+                        </div>
+                    </button>
+
+                    <!-- Таблица лидеров -->
+                    <button onclick="openModal('leaderboard')" class="w-full bg-slate-800/85 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3.5 flex items-center justify-between transition active:scale-[0.99]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xl">
+                                📊
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-black text-white">Таблица лидеров (Топ-100)</div>
+                                <div class="text-[11px] text-slate-400">Сезон 3 месяца • По рейтингу и выигрышу</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold bg-emerald-500/15 text-emerald-300 px-2 py-1 rounded-xl border border-emerald-500/30">Сезон #1</span>
+                            <span class="text-slate-500 text-sm">❯</span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Нижняя строка: Промокод для друзей и Админка -->
+                <div class="grid grid-cols-2 gap-2.5 pt-1">
+                    <button onclick="openModal('promo')" class="bg-slate-800/70 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3 flex items-center gap-2.5 transition active:scale-95">
+                        <span class="text-lg">🎁</span>
+                        <div class="text-left">
+                            <div class="text-xs font-black text-white">Промокод</div>
+                            <div class="text-[10px] text-slate-400">Бонус для друзей</div>
+                        </div>
+                    </button>
+
+                    <button onclick="openModal('admin')" class="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-2xl p-3 flex items-center gap-2.5 transition active:scale-95">
+                        <span class="text-lg">👑</span>
+                        <div class="text-left">
+                            <div class="text-xs font-black text-rose-300">Админ-панель</div>
+                            <div class="text-[10px] text-rose-200/70">Управление игрой</div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Виджет текущей экипировки -->
+                <div class="bg-slate-800/50 border border-slate-800 rounded-2xl p-3 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div id="home-preview-back" class="w-8 h-11 rounded-lg back-classic shadow-md"></div>
+                        <div>
+                            <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Текущее оформление</div>
+                            <div id="home-equipped-names" class="text-xs font-bold text-white mt-0.5">Синяя классика • Изумруд</div>
+                        </div>
+                    </div>
+                    <button onclick="openModal('inventory')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-emerald-400 border border-slate-700">
+                        Сменить
+                    </button>
+                </div>
+            </section>
+
+            <!-- ЭКРАН 2: ОТКРЫТЫЕ ИГРЫ -->
+            <section id="screen-games" class="hidden flex-1 flex flex-col overflow-hidden p-3.5">
+                <div class="flex items-center justify-between gap-2 mb-2.5 shrink-0">
+                    <div>
+                        <h2 class="text-sm font-black text-white">Открытые столы</h2>
+                        <p id="games-filter-summary" class="text-[11px] text-slate-400">Все ставки • 2–6 игр. • Любой режим</p>
+                    </div>
+                    <button onclick="openModal('filters')" class="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-black flex items-center gap-1.5 active:scale-95 transition">
+                        <span>⚙️ Фильтры</span>
+                        <span id="active-filters-badge" class="hidden px-1.5 py-0.2 bg-emerald-500 text-slate-950 rounded-full text-[10px] font-black">!</span>
+                    </button>
+                </div>
+                <div id="public-sessions-list" class="flex-1 overflow-y-auto space-y-2 pr-0.5"></div>
+            </section>
+
+            <!-- ЭКРАН 3: ПРИВАТНЫЕ ИГРЫ -->
+            <section id="screen-private" class="hidden flex-1 flex flex-col overflow-hidden p-3.5">
+                <div class="flex items-center justify-between gap-2 mb-2.5 shrink-0">
+                    <div>
+                        <h2 class="text-sm font-black text-white">Приватные столы 🔒</h2>
+                        <p class="text-[11px] text-slate-400">Вход по PIN-паролю или ссылке для друзей</p>
+                    </div>
+                    <button onclick="openCreateWithPrivatePreset()" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold active:scale-95 transition">
+                        + Свой приват
+                    </button>
+                </div>
+                <div id="private-sessions-list" class="flex-1 overflow-y-auto space-y-2 pr-0.5"></div>
+            </section>
+
+            <!-- ЭКРАН 4: СОЗДАТЬ ИГРУ -->
+            <section id="screen-create" class="hidden flex-1 overflow-y-auto p-3.5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-sm font-black text-white">Создание стола</h2>
+                        <p class="text-[11px] text-slate-400">Выберите правила и пригласите игроков</p>
+                    </div>
+                    <span class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">
+                        Комиссия <span id="create-rake-label">5</span>%
+                    </span>
+                </div>
+
+                <!-- Ставка -->
+                <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-300">Ставка входа (100 – 10M 🪙)</span>
+                        <span id="create-bet-display" class="text-sm font-black text-amber-400">250 🪙</span>
+                    </div>
+                    <div id="create-bet-grid" class="grid grid-cols-4 gap-1.5"></div>
+                </div>
+
+                <!-- Игроки и Колода -->
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-3 space-y-2">
+                        <span class="text-[11px] font-bold text-slate-300 block">Игроков (2–6)</span>
+                        <div id="create-players-grid" class="grid grid-cols-5 gap-1"></div>
+                    </div>
+                    <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-3 space-y-2">
+                        <span class="text-[11px] font-bold text-slate-300 block">Карт в колоде</span>
+                        <div id="create-deck-grid" class="grid grid-cols-3 gap-1"></div>
+                    </div>
+                </div>
+
+                <!-- Параметры правил -->
+                <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-3 space-y-3">
+                    <div>
+                        <span class="text-[11px] font-bold text-slate-400 block mb-1.5">Режим игры</span>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <button id="cr-mode-podkidnoy" onclick="setCreateOption('mode','podkidnoy')" class="py-2 rounded-xl text-xs font-extrabold border">⚔️ Подкидной</button>
+                            <button id="cr-mode-perevodnoy" onclick="setCreateOption('mode','perevodnoy')" class="py-2 rounded-xl text-xs font-extrabold border">🔄 Переводной</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="text-[11px] font-bold text-slate-400 block mb-1.5">Проверка правил (Шулер / Честная)</span>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <button id="cr-cheat-fair" onclick="setCreateOption('cheating',false)" class="py-2 rounded-xl text-xs font-extrabold border">🛡️ Честная</button>
+                            <button id="cr-cheat-on" onclick="setCreateOption('cheating',true)" class="py-2 rounded-xl text-xs font-extrabold border">🎭 С шулером</button>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1 leading-tight">
+                            В режиме <b>«С шулером»</b> можно ходить и биться любой картой, но если соперник нажмет «Ловить шулера!», карта вернется, а шулерить больше нельзя.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <span class="text-[11px] font-bold text-slate-400 block mb-1.5">Финал партии</span>
+                            <div class="grid grid-cols-2 gap-1">
+                                <button id="cr-end-classic" onclick="setCreateOption('allowDraw',false)" class="py-2 rounded-xl text-[11px] font-extrabold border">🏆 Классика</button>
+                                <button id="cr-end-draw" onclick="setCreateOption('allowDraw',true)" class="py-2 rounded-xl text-[11px] font-extrabold border">🤝 Ничья</button>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-bold text-slate-400 block mb-1.5">Подкидывают</span>
+                            <div class="grid grid-cols-2 gap-1">
+                                <button id="cr-throw-neighbors" onclick="setCreateOption('throwRule','neighbors')" class="py-2 rounded-xl text-[11px] font-extrabold border">👥 Соседи</button>
+                                <button id="cr-throw-all" onclick="setCreateOption('throwRule','all')" class="py-2 rounded-xl text-[11px] font-extrabold border">🌐 Все</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Приватность -->
+                <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-3 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-white">🔒 Приватный стол с паролем</div>
+                            <div class="text-[10px] text-slate-400">Для игры с друзьями из Telegram</div>
+                        </div>
+                        <input id="cr-private-check" type="checkbox" onchange="toggleCreatePrivate()" class="w-5 h-5 accent-emerald-500 rounded cursor-pointer">
+                    </div>
+                    <div id="cr-private-box" class="hidden grid grid-cols-2 gap-2 pt-1">
+                        <input id="cr-room-title" type="text" maxlength="22" placeholder="Название стола" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+                        <input id="cr-room-pass" type="text" maxlength="8" value="7777" placeholder="Пароль (PIN)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-amber-300 font-bold tracking-widest focus:outline-none">
+                    </div>
+                </div>
+
+                <button onclick="submitCreateGame()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-sm shadow-lg shadow-emerald-950/60 active:scale-[0.99] transition">
+                    🚀 Открыть стол и начать
+                </button>
+            </section>
+
+            <!-- ================= ИГРОВОЙ СТОЛ (ОВЕРЛЕЙ ПАРТИИ) ================= -->
+            <section id="screen-table" class="hidden absolute inset-0 z-40 flex flex-col justify-between p-2.5 felt-emerald transition-colors duration-300">
+                <!-- Верхняя панель соперника и выхода -->
+                <div class="flex items-center justify-between bg-slate-950/55 backdrop-blur-md px-3 py-2 rounded-2xl border border-white/10 z-20">
+                    <div class="flex items-center gap-2">
+                        <div class="relative">
+                            <div id="table-opp-avatar" class="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center text-lg border border-slate-600">🤖</div>
+                            <div id="opp-emoji-spot" class="hidden absolute -bottom-2 -right-3 text-2xl pointer-events-none"></div>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span id="table-opp-name" class="text-xs font-extrabold text-white">Александр_77</span>
+                                <span id="table-opp-rank" class="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-md font-bold">Золото</span>
+                            </div>
+                            <div id="table-rules-line" class="text-[10px] text-emerald-200/80 font-medium">Подкидной • 36 карт</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                        <div class="px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-300 font-black text-xs">
+                            Банк: <span id="table-pot">500</span> 🪙
+                        </div>
+                        <button onclick="surrenderMatch()" class="px-2.5 py-1 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/30 text-rose-200 text-[11px] font-bold">
+                            Сдаться
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Веер карт соперника -->
+                <div class="flex flex-col items-center justify-center my-0.5 z-10">
+                    <div id="opp-hand-fan" class="flex items-center justify-center h-12"></div>
+                    <span id="opp-cards-counter" class="text-[10px] text-white/75 font-bold mt-0.5">6 карт</span>
+                </div>
+
+                <!-- ЦЕНТР СТОЛА: КОЛОДА, ОТКРЫТЫЙ КОЗЫРЬ И СЛОТЫ БОЯ -->
+                <div class="flex-1 flex items-center justify-between px-1 relative my-1 z-10">
+                    <!-- Колода + Выступающий козырь -->
+                    <div id="deck-anchor" class="relative w-28 h-28 flex items-center justify-start shrink-0">
+                        <!-- Плашка текущего козыря сверху -->
+                        <div id="trump-pill-badge" class="absolute -top-3 left-0 z-30 px-2 py-0.5 rounded-full bg-slate-950/85 border border-white/20 text-[10px] font-black shadow flex items-center gap-1">
+                            <span class="text-slate-300">Козырь:</span>
+                            <span id="trump-pill-text" class="text-white">A♠</span>
+                        </div>
+
+                        <!-- Открытая козырная карта под колодой -->
+                        <div id="trump-card-box" class="absolute left-7 top-6 w-14 h-20 rounded-lg face-classic shadow-lg flex flex-col justify-between p-1.5 -rotate-90 z-10">
+                            <div class="flex flex-col items-end leading-none">
+                                <div id="trump-rank-label" class="text-xs font-black">A</div>
+                                <div id="trump-suit-mini" class="text-xs leading-none">♠</div>
+                            </div>
+                            <div id="trump-suit-big" class="text-2xl self-center leading-none">♠</div>
+                        </div>
+
+                        <!-- Стопка закрытой колоды -->
+                        <div id="deck-pile-box" class="relative left-0 top-1 w-14 h-20 rounded-lg back-classic shadow-2xl flex items-center justify-center z-20">
+                            <span id="deck-counter-badge" class="bg-slate-950/85 text-white text-xs font-black px-2 py-0.5 rounded-full border border-white/20">24</span>
+                        </div>
+
+                        <!-- Пустая колода: иконка масти козыря -->
+                        <div id="empty-trump-watermark" class="hidden absolute left-3 top-4 w-14 h-16 rounded-xl border-2 border-dashed border-white/25 flex items-center justify-center text-3xl opacity-55">
+                            ♠
+                        </div>
+                    </div>
+
+                    <!-- Поле боя (до 6 пар карт) -->
+                    <div id="battle-grid" class="flex-1 grid grid-cols-3 gap-2 place-items-center px-1 min-h-[145px]"></div>
+
+                    <!-- Невидимый якорь отбоя справа за краем -->
+                    <div id="discard-anchor" class="w-2 h-16 pointer-events-none"></div>
+                </div>
+
+                <!-- Статус хода + Кнопка поймать шулера + Кнопки действий -->
+                <div class="flex flex-col items-center gap-1.5 z-20 my-1">
+                    <div class="flex items-center gap-2">
+                        <div id="turn-banner" class="px-3.5 py-1 rounded-full bg-slate-950/75 border border-white/15 text-xs font-extrabold text-emerald-300 shadow">
+                            Ваш ход • Атакуйте
+                        </div>
+                        <button id="btn-catch-cheater" onclick="catchOpponentCheating()" class="hidden px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-lg animate-bounce">
+                            🚨 Ловить шулера!
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-center gap-2 min-h-[38px]">
+                        <button id="btn-bito" onclick="handleBitoAction()" class="hidden px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-lg active:scale-95 transition">
+                            ✅ Бито
+                        </button>
+                        <button id="btn-take" onclick="handleTakeAction()" class="hidden px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg active:scale-95 transition">
+                            📥 Взять
+                        </button>
+                        <button id="btn-transfer" onclick="handleTransferAction()" class="hidden px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-black text-xs shadow-lg active:scale-95 transition">
+                            🔄 Перевести
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Нижняя часть стола: Эмодзи + Веер карт игрока внахлест -->
+                <div class="flex flex-col items-center z-20">
+                    <div class="flex items-center justify-between w-full px-2 mb-1">
+                        <div class="flex items-center gap-1 bg-slate-950/55 px-2 py-1 rounded-full border border-white/10">
+                            <button onclick="sendTableEmoji('😎')" class="hover:scale-125 transition text-sm">😎</button>
+                            <button onclick="sendTableEmoji('😂')" class="hover:scale-125 transition text-sm">😂</button>
+                            <button onclick="sendTableEmoji('🐻')" class="hover:scale-125 transition text-sm">🐻</button>
+                            <button onclick="sendTableEmoji('🥱')" class="hover:scale-125 transition text-sm">🥱</button>
+                            <button onclick="sendTableEmoji('😡')" class="hover:scale-125 transition text-sm">😡</button>
+                            <button onclick="sendTableEmoji('🤡')" class="hover:scale-125 transition text-sm">🤡</button>
+                        </div>
+                        <div class="relative">
+                            <div id="player-emoji-spot" class="hidden absolute -top-9 right-2 text-2xl pointer-events-none"></div>
+                            <span id="table-cheat-indicator" class="text-[10px] font-bold text-white/75">🛡️ Честная</span>
+                        </div>
+                    </div>
+
+                    <!-- Контейнер веера карт внахлест -->
+                    <div id="player-hand-fan" class="relative w-full h-28 flex items-end justify-center overflow-visible"></div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- ================= НИЖНЕЕ МЕНЮ НАВИГАЦИИ ================= -->
+        <nav class="bg-slate-900/95 border-t border-slate-800 px-2 py-1.5 grid grid-cols-4 gap-1 z-30 shrink-0">
+            <button id="nav-home" onclick="switchScreen('home')" class="flex flex-col items-center py-1 rounded-xl text-emerald-400 bg-slate-800/80 font-bold">
+                <span class="text-base">🏠</span>
+                <span class="text-[10px] mt-0.5">Главная</span>
+            </button>
+            <button id="nav-games" onclick="switchScreen('games')" class="flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-200 font-semibold">
+                <span class="text-base">🃏</span>
+                <span class="text-[10px] mt-0.5">Игры</span>
+            </button>
+            <button id="nav-private" onclick="switchScreen('private')" class="flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-200 font-semibold">
+                <span class="text-base">🔒</span>
+                <span class="text-[10px] mt-0.5">Приватные</span>
+            </button>
+            <button id="nav-create" onclick="switchScreen('create')" class="flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-200 font-semibold">
+                <span class="text-base">➕</span>
+                <span class="text-[10px] mt-0.5">Создать игру</span>
+            </button>
+        </nav>
+
+        <!-- ================= МОДАЛЬНЫЕ ОКНА ================= -->
+
+        <!-- 1. МОДАЛКА: ИНВЕНТАРЬ И СКИНЫ -->
+        <div id="modal-inventory" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div class="bg-slate-900 border-t sm:border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[88vh] flex flex-col overflow-hidden">
+                <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-black text-white">🎒 Инвентарь и Скины</h3>
+                        <p class="text-[11px] text-slate-400">Нажмите на скин, чтобы надеть или купить</p>
+                    </div>
+                    <button onclick="closeModal('inventory')" class="w-8 h-8 rounded-xl bg-slate-800 text-slate-400 hover:text-white font-bold">✕</button>
+                </div>
+                <div class="px-4 pt-3 flex gap-2">
+                    <button id="inv-tab-owned" onclick="switchInventoryTab('owned')" class="flex-1 py-2 rounded-xl text-xs font-extrabold bg-emerald-500 text-slate-950">Мои предметы</button>
+                    <button id="inv-tab-all" onclick="switchInventoryTab('all')" class="flex-1 py-2 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300">Витрина скинов</button>
+                </div>
+                <div id="inventory-modal-body" class="p-4 overflow-y-auto space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- 2. МОДАЛКА: ДОСТИЖЕНИЯ -->
+        <div id="modal-achievements" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div class="bg-slate-900 border-t sm:border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[86vh] flex flex-col overflow-hidden">
+                <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-black text-white">🏆 Достижения и Ранги</h3>
+                        <p class="text-[11px] text-slate-400">Выполняйте испытания в партиях и получайте монеты</p>
+                    </div>
+                    <button onclick="closeModal('achievements')" class="w-8 h-8 rounded-xl bg-slate-800 text-slate-400 hover:text-white font-bold">✕</button>
+                </div>
+                <div id="achievements-modal-body" class="p-4 overflow-y-auto space-y-2.5"></div>
+            </div>
+        </div>
+
+        <!-- 3. МОДАЛКА: ТАБЛИЦА ЛИДЕРОВ (ТОП-100) -->
+        <div id="modal-leaderboard" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div class="bg-slate-900 border-t sm:border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[86vh] flex flex-col overflow-hidden">
+                <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-black text-white">📊 Таблица лидеров (Топ-100)</h3>
+                        <p class="text-[11px] text-emerald-400 font-semibold">⏳ Сезон обновляется раз в 3 месяца • Осталось: 74 дн. 11 ч.</p>
+                    </div>
+                    <button onclick="closeModal('leaderboard')" class="w-8 h-8 rounded-xl bg-slate-800 text-slate-400 hover:text-white font-bold">✕</button>
+                </div>
+                <div class="px-4 pt-3 flex gap-2">
+                    <button id="lb-tab-rp" onclick="switchLeaderboardTab('rp')" class="flex-1 py-2 rounded-xl text-xs font-extrabold bg-emerald-500 text-slate-950">🏆 По рейтингу (RP)</button>
+                    <button id="lb-tab-coins" onclick="switchLeaderboardTab('coins')" class="flex-1 py-2 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300">💰 Выигранные 🪙</button>
+                </div>
+                <div id="leaderboard-modal-body" class="p-4 overflow-y-auto space-y-1.5"></div>
+            </div>
+        </div>
+
+        <!-- 4. МОДАЛКА: ФИЛЬТРЫ ПОИСКА ИГР -->
+        <div id="modal-filters" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div class="bg-slate-900 border-t sm:border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[88vh] flex flex-col overflow-hidden">
+                <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-black text-white">⚙️ Фильтры столов</h3>
+                        <p class="text-[11px] text-slate-400">Отфильтруйте список открытых сессий</p>
+                    </div>
+                    <button onclick="closeModal('filters')" class="w-8 h-8 rounded-xl bg-slate-800 text-slate-400 hover:text-white font-bold">✕</button>
+                </div>
+                <div id="filters-modal-body" class="p-4 overflow-y-auto space-y-3.5"></div>
+                <div class="p-3.5 border-t border-slate-800 grid grid-cols-2 gap-2">
+                    <button onclick="resetGameFilters()" class="py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs">Сбросить всё</button>
+                    <button onclick="applyGameFilters()" class="py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">Показать столы</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. МОДАЛКА: МАГАЗИН (СКИНЫ, МОНЕТЫ, TELEGRAM STARS) -->
+        <div id="modal-shop" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div class="bg-slate-900 border-t sm:border border-slate-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[88vh] flex flex-col overflow-hidden">
+                <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-black text-white">🛍️ Магазин Скинов и Валюты</h3>
+                        <p class="text-[11px] text-slate-400">Покупайте скины, пополняйте баланс за ⭐️ и забирайте бонус</p>
+                    </div>
+                    <button onclick="closeModal('shop')" class="w-8 h-8 rounded-xl bg-slate-800 text-slate-400 hover:text-white font-bold">✕</button>
+                </div>
+                <div id="shop-modal-body" class="p-4 overflow-y-auto space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- 6. МОДАЛКА: ПРОМОКОД ДЛЯ ДРУЗЕЙ -->
+        <div id="modal-promo" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-800 w-full max-w-xs rounded-3xl p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-black text-white">🎁 Активация промокода</h3>
+                    <button onclick="closeModal('promo')" class="text-slate-400 hover:text-white">✕</button>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">
+                    Введите подарочный код для получения монет или звезд (для теста с друзьями доступны: <b class="text-emerald-400">TEST2026</b>, <b class="text-amber-300">DURAK777</b>, <b class="text-sky-300">FRIENDS</b>):
+                </p>
+                <input id="promo-code-input" type="text" maxlength="20" placeholder="Например: TEST2026" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-center text-sm font-black uppercase tracking-wider text-emerald-400 focus:outline-none">
+                <button onclick="redeemPromoCode()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs">
+                    Активировать код
+                </button>
+            </div>
+        </div>
+
+        <!-- 7. МОДАЛКА: АДМИН-ПАНЕЛЬ -->
+        <div id="modal-admin" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div class="bg-slate-900 border-t sm:border border-rose-500/40 w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl">
+                <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-rose-950/50 to-slate-900">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">👑</span>
+                        <div>
+                            <h3 class="text-sm font-black text-white">Админ-панель управления</h3>
+                            <p class="text-[10px] text-rose-300 font-semibold">Управление экономикой, скинами, игроками и промокодами</p>
+                        </div>
+                    </div>
+                    <button onclick="closeModal('admin')" class="w-8 h-8 rounded-xl bg-slate-800 text-slate-400 hover:text-white font-bold">✕</button>
+                </div>
+
+                <div class="px-3 pt-2.5 grid grid-cols-4 gap-1 border-b border-slate-800 pb-2.5">
+                    <button id="adm-tab-dash" onclick="switchAdminTab('dash')" class="py-1.5 rounded-xl text-[11px] font-black bg-rose-500 text-white">📊 Экономика</button>
+                    <button id="adm-tab-skins" onclick="switchAdminTab('skins')" class="py-1.5 rounded-xl text-[11px] font-black bg-slate-800 text-slate-300">🎨 Скины</button>
+                    <button id="adm-tab-users" onclick="switchAdminTab('users')" class="py-1.5 rounded-xl text-[11px] font-black bg-slate-800 text-slate-300">👥 Игроки</button>
+                    <button id="adm-tab-promos" onclick="switchAdminTab('promos')" class="py-1.5 rounded-xl text-[11px] font-black bg-slate-800 text-slate-300">🎁 Промокоды</button>
+                </div>
+
+                <div id="admin-modal-body" class="p-4 overflow-y-auto space-y-3.5 flex-1"></div>
+            </div>
+        </div>
+
+        <!-- 8. МОДАЛКА: КОМНАТА ОЖИДАНИЯ ДРУГА + ПАРОЛЬ + ИТОГ МАТЧА -->
+        <div id="modal-waiting" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-800 w-full max-w-xs rounded-3xl p-4 space-y-3 text-center">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-2xl mx-auto">⏳</div>
+                <h3 id="wait-room-title" class="text-base font-black text-white">Комната создана</h3>
+                <p id="wait-room-desc" class="text-xs text-slate-400"></p>
+                <div id="wait-pass-pill" class="bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-xs font-bold text-amber-300"></div>
+                <div class="space-y-2 pt-1">
+                    <button onclick="shareTelegramInvite()" class="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs">
+                        ✈️ Пригласить друга из Telegram
+                    </button>
+                    <button onclick="copyRoomInviteLink()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                        🔗 Скопировать ссылку и PIN
+                    </button>
+                    <button onclick="startWaitingRoomNow()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs">
+                        ⚡ Подключить соперника и начать
+                    </button>
+                    <button onclick="closeModal('waiting')" class="w-full py-2 rounded-xl text-slate-500 text-xs font-bold">Отмена</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-password" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-800 w-full max-w-xs rounded-3xl p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-black text-white">🔒 Вход в приватный стол</h3>
+                    <button onclick="closeModal('password')" class="text-slate-400">✕</button>
+                </div>
+                <p id="pass-modal-room" class="text-xs text-slate-400"></p>
+                <input id="pass-modal-input" type="text" maxlength="8" placeholder="Введите PIN-пароль" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-center text-sm font-black tracking-widest text-amber-300">
+                <button onclick="confirmPrivateJoin()" class="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">Войти за стол</button>
+            </div>
+        </div>
+
+        <div id="modal-result" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-800 w-full max-w-xs rounded-3xl p-5 text-center space-y-3">
+                <div id="res-icon" class="text-5xl">🏆</div>
+                <h3 id="res-title" class="text-lg font-black text-white">Победа!</h3>
+                <p id="res-subtitle" class="text-xs text-slate-300"></p>
+                <div id="res-rewards" class="bg-slate-950 border border-slate-800 rounded-2xl p-3 text-xs font-bold space-y-1"></div>
+                <div class="grid grid-cols-2 gap-2 pt-2">
+                    <button onclick="leaveTableToLobby()" class="py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs">В меню</button>
+                    <button onclick="rematchSameSettings()" class="py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">Ещё партию</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ===================== 1. КОНФИГУРАЦИЯ, ПРОФИЛЬ И АДМИН-НАСТРОЙКИ =====================
+        const RANKS = [
+            { name: 'Бронза', min: 0, icon: '🥉' },
+            { name: 'Серебро', min: 200, icon: '🥈' },
+            { name: 'Золото', min: 450, icon: '🥇' },
+            { name: 'Платина', min: 800, icon: '💠' },
+            { name: 'Алмаз', min: 1300, icon: '💎' },
+            { name: 'Мастер', min: 2000, icon: '👑' },
+            { name: 'Гроссмейстер', min: 3000, icon: '🔥' }
+        ];
+
+        const BET_PRESETS = [100, 150, 250, 500, 1000, 2500, 5000, 10000, 50000, 250000, 1000000, 10000000];
+
+        let SKINS_CATALOG = [
+            // Рубашки карт
+            { id: 'back-classic', category: 'back', name: 'Синяя классика', css: 'back-classic', priceCoins: 0, priceStars: 0 },
+            { id: 'back-gold', category: 'back', name: 'Имперское золото', css: 'back-gold', priceCoins: 1200, priceStars: 0 },
+            { id: 'back-neon', category: 'back', name: 'Киберпанк Неон', css: 'back-neon', priceCoins: 0, priceStars: 45 },
+            { id: 'back-ruby', category: 'back', name: 'Кровавый рубин', css: 'back-ruby', priceCoins: 0, priceStars: 75 },
+            // Лица карт
+            { id: 'face-classic', category: 'face', name: 'Светлая колода', css: 'face-classic', priceCoins: 0, priceStars: 0 },
+            { id: 'face-dark', category: 'face', name: 'Ночной графит', css: 'face-dark', priceCoins: 900, priceStars: 0 },
+            { id: 'face-gold', category: 'face', name: 'Золотой слиток', css: 'face-gold', priceCoins: 0, priceStars: 60 },
+            // Сукно стола
+            { id: 'felt-emerald', category: 'felt', name: 'Изумрудный клуб', css: 'felt-emerald', priceCoins: 0, priceStars: 0 },
+            { id: 'felt-royal', category: 'felt', name: 'Королевский сапфир', css: 'felt-royal', priceCoins: 1000, priceStars: 0 },
+            { id: 'felt-crimson', category: 'felt', name: 'Бархатный бордо', css: 'felt-crimson', priceCoins: 1800, priceStars: 0 },
+            { id: 'felt-cyber', category: 'felt', name: 'Неоновый пурпур', css: 'felt-cyber', priceCoins: 0, priceStars: 55 }
+        ];
+
+        const ACHIEVEMENTS_LIST = [
+            { id: 'first_win', title: 'Первая победа', desc: 'Выиграйте свою первую партию в Дурака', reward: 300, icon: '⚔️' },
+            { id: 'pogony', title: 'Погоны!', desc: 'Завершите партию последним ходом шестеркой', reward: 1000, icon: '🎖️' },
+            { id: 'clean_win', title: 'Чистая победа', desc: 'Победите, ни разу не взяв карты со стола', reward: 600, icon: '🛡️' },
+            { id: 'catch_cheat', title: 'Гроза шулеров', desc: 'Поймайте соперника на шулерстве за столом', reward: 750, icon: '🚨' },
+            { id: 'sleight_hand', title: 'Ловкость рук', desc: 'Успешно проведите шулерский ход без поимки', reward: 500, icon: '🎭' },
+            { id: 'high_roller', title: 'Крупная рыба', desc: 'Выиграйте за столом со ставкой от 5 000 🪙', reward: 1500, icon: '💎' }
+        ];
+
+        let ADMIN_CONFIG = {
+            botUsername: 'durak_online_bot',
+            dailyRefillLimit: 1500,
+            rakePercent: 5,
+            totalGamesPlayed: 142,
+            totalStarsDonated: 1850
+        };
+
+        let PROMO_CODES = [
+            { code: 'TEST2026', coins: 5000, stars: 50, usesLeft: 99 },
+            { code: 'DURAK777', coins: 2500, stars: 0, usesLeft: 50 },
+            { code: 'FRIENDS', coins: 10000, stars: 100, usesLeft: 25 }
+        ];
+
+        let MOCK_USERS_DB = [
+            { id: 101, name: 'Вы (Игрок #1)', rp: 120, coins: 1500, banned: false, isSelf: true },
+            { id: 102, name: 'Дмитрий_ТГ', rp: 1450, coins: 28400, banned: false, isSelf: false },
+            { id: 103, name: 'Козырной_Туз', rp: 3120, coins: 420000, banned: false, isSelf: false },
+            { id: 104, name: 'Шулер_99', rp: 890, coins: 6200, banned: false, isSelf: false },
+            { id: 105, name: 'Алина_Старс', rp: 2150, coins: 95000, banned: false, isSelf: false }
+        ];
+
+        const DEFAULT_STATE = {
+            coins: 1500,
+            stars: 50,
+            rp: 120,
+            totalWonCoins: 3450,
+            ownedSkins: ['back-classic', 'face-classic', 'felt-emerald'],
+            equipped: {
+                back: 'back-classic',
+                face: 'face-classic',
+                felt: 'felt-emerald'
+            },
+            achievements: {},
+            usedPromos: [],
+            lastRefillDate: new Date().toDateString()
+        };
+
+        let STATE = loadProfile();
+        let currentInventoryTab = 'owned';
+        let currentLeaderboardTab = 'rp';
+        let currentAdminTab = 'dash';
+        let currentShopCategory = 'all';
+
+        function loadProfile() {
+            try {
+                const raw = localStorage.getItem('durak_tma_release_v1');
+                if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+                const parsed = JSON.parse(raw);
+                return {
+                    ...DEFAULT_STATE,
+                    ...parsed,
+                    equipped: { ...DEFAULT_STATE.equipped, ...(parsed.equipped || {}) },
+                    achievements: { ...(parsed.achievements || {}) },
+                    usedPromos: parsed.usedPromos || []
+                };
+            } catch (e) {
+                return JSON.parse(JSON.stringify(DEFAULT_STATE));
+            }
+        }
+
+        function saveProfile() {
+            const selfUser = MOCK_USERS_DB.find(u => u.isSelf);
+            if (selfUser) {
+                selfUser.coins = STATE.coins;
+                selfUser.rp = STATE.rp;
+            }
+            try {
+                localStorage.setItem('durak_tma_release_v1', JSON.stringify(STATE));
+            } catch (e) {}
+            updateHeaderAndHomeUI();
+        }
+
+        function formatCompactNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(num % 1000000 === 0 ? 0 : 1) + 'M';
+            if (num >= 10000) return (num / 1000).toFixed(0) + 'K';
+            return num.toLocaleString('ru-RU');
+        }
+
+        function getRankObject(rp) {
+            let current = RANKS[0];
+            for (const r of RANKS) {
+                if (rp >= r.min) current = r;
+            }
+            return current;
+        }
+
+        function showToast(message) {
+            const box = document.getElementById('toast-box');
+            const txt = document.getElementById('toast-text');
+            txt.textContent = message;
+            box.classList.remove('opacity-0', '-translate-y-2');
+            box.classList.add('opacity-100', 'translate-y-0');
+            clearTimeout(window.__toastTimer);
+            window.__toastTimer = setTimeout(() => {
+                box.classList.add('opacity-0', '-translate-y-2');
+                box.classList.remove('opacity-100', 'translate-y-0');
+            }, 2500);
+        }
+
+        function updateHeaderAndHomeUI() {
+            const rank = getRankObject(STATE.rp);
+            document.getElementById('header-rank-icon').textContent = rank.icon;
+            document.getElementById('header-rank-name').textContent = rank.name;
+            document.getElementById('header-rp').textContent = `${STATE.rp} RP`;
+            document.getElementById('header-coins').textContent = STATE.coins.toLocaleString('ru-RU');
+            document.getElementById('header-stars').textContent = STATE.stars.toLocaleString('ru-RU');
+
+            document.getElementById('home-refill-limit').textContent = ADMIN_CONFIG.dailyRefillLimit.toLocaleString('ru-RU');
+            document.getElementById('create-rake-label').textContent = ADMIN_CONFIG.rakePercent;
+
+            document.getElementById('home-inv-count').textContent = `${STATE.ownedSkins.length} предм.`;
+            const unlockedCount = Object.values(STATE.achievements).filter(a => a && a.unlocked).length;
+            document.getElementById('home-ach-count').textContent = `${unlockedCount} / ${ACHIEVEMENTS_LIST.length}`;
+
+            const backSkin = SKINS_CATALOG.find(s => s.id === STATE.equipped.back) || SKINS_CATALOG[0];
+            const feltSkin = SKINS_CATALOG.find(s => s.id === STATE.equipped.felt) || SKINS_CATALOG[7];
+            const prevEl = document.getElementById('home-preview-back');
+            prevEl.className = `w-8 h-11 rounded-lg shadow-md ${backSkin.css}`;
+            document.getElementById('home-equipped-names').textContent = `${backSkin.name} • ${feltSkin.name}`;
+        }
+
+        function claimDailyRefill() {
+            const limit = ADMIN_CONFIG.dailyRefillLimit;
+            if (STATE.coins < limit) {
+                const diff = limit - STATE.coins;
+                STATE.coins = limit;
+                STATE.lastRefillDate = new Date().toDateString();
+                saveProfile();
+                showToast(`🎁 Баланс бесплатно пополнен на +${diff.toLocaleString('ru-RU')} 🪙 (до ${limit.toLocaleString('ru-RU')} 🪙)!`);
+            } else {
+                showToast(`У вас уже ${STATE.coins.toLocaleString('ru-RU')} 🪙! Бесплатный долив срабатывает при балансе ниже ${limit.toLocaleString('ru-RU')} 🪙.`);
+            }
+        }
+
+        // ===================== 2. НАВИГАЦИЯ И СПИСКИ СТОЛОВ =====================
+        function switchScreen(screen) {
+            ['home', 'games', 'private', 'create'].forEach(s => {
+                document.getElementById(`screen-${s}`).classList.add('hidden');
+                const btn = document.getElementById(`nav-${s}`);
+                btn.className = 'flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-200 font-semibold';
+            });
+            document.getElementById(`screen-${screen}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${screen}`);
+            activeBtn.className = 'flex flex-col items-center py-1 rounded-xl text-emerald-400 bg-slate-800/80 font-bold';
+
+            if (screen === 'games') renderPublicSessions();
+            if (screen === 'private') renderPrivateSessions();
+            if (screen === 'create') renderCreateScreenControls();
+        }
+
+        let ALL_SESSIONS = [
+            { id: 101, title: 'Быстрый стол #101', host: 'Волк_С_ТГ', avatar: '🐺', rank: 'Золото', bet: 100, maxPlayers: 2, curPlayers: 1, deckSize: 36, mode: 'podkidnoy', cheating: false, allowDraw: false, throwRule: 'neighbors', isPrivate: false },
+            { id: 102, title: 'Клуб Шулеров 🎭', host: 'Ловкач_777', avatar: '🎭', rank: 'Платина', bet: 250, maxPlayers: 2, curPlayers: 1, deckSize: 36, mode: 'perevodnoy', cheating: true, allowDraw: true, throwRule: 'all', isPrivate: false },
+            { id: 103, title: 'Стол на четверых', host: 'Катана', avatar: '🥷', rank: 'Серебро', bet: 500, maxPlayers: 4, curPlayers: 3, deckSize: 36, mode: 'podkidnoy', cheating: false, allowDraw: false, throwRule: 'neighbors', isPrivate: false },
+            { id: 104, title: 'Блиц 24 карты', host: 'Молния', avatar: '⚡', rank: 'Золото', bet: 150, maxPlayers: 2, curPlayers: 1, deckSize: 24, mode: 'podkidnoy', cheating: false, allowDraw: true, throwRule: 'neighbors', isPrivate: false },
+            { id: 105, title: 'Королевский 52', host: 'Император', avatar: '👑', rank: 'Мастер', bet: 5000, maxPlayers: 6, curPlayers: 5, deckSize: 52, mode: 'perevodnoy', cheating: true, allowDraw: false, throwRule: 'all', isPrivate: false },
+            { id: 106, title: 'Хайролл Олимп', host: 'Миллионер', avatar: '💎', rank: 'Гроссмейстер', bet: 100000, maxPlayers: 2, curPlayers: 1, deckSize: 36, mode: 'podkidnoy', cheating: false, allowDraw: false, throwRule: 'neighbors', isPrivate: false },
+            // Приватные столы
+            { id: 201, title: 'Для своих из чата', host: 'Дмитрий_ТГ', avatar: '🦊', rank: 'Золото', bet: 250, maxPlayers: 2, curPlayers: 1, deckSize: 36, mode: 'podkidnoy', cheating: false, allowDraw: false, throwRule: 'neighbors', isPrivate: true, password: '1234' },
+            { id: 202, title: 'Ночной приват с шулером', host: 'Виктор_К', avatar: '🦅', rank: 'Алмаз', bet: 1000, maxPlayers: 4, curPlayers: 3, deckSize: 36, mode: 'perevodnoy', cheating: true, allowDraw: true, throwRule: 'all', isPrivate: true, password: '7777' }
+        ];
+
+        let GAME_FILTERS = {
+            minBet: 100,
+            maxBet: 10000000,
+            players: 'any',
+            deckSize: 'any',
+            mode: 'any',
+            cheating: 'any',
+            allowDraw: 'any',
+            throwRule: 'any'
+        };
+
+        function getSessionBadgesHTML(s) {
+            return `
+                <span class="px-2 py-0.5 rounded-lg bg-slate-900 text-slate-200 text-[10px] font-bold border border-slate-700">🃏 ${s.deckSize}</span>
+                <span class="px-2 py-0.5 rounded-lg bg-slate-900 text-sky-300 text-[10px] font-bold border border-slate-700">${s.mode === 'podkidnoy' ? '⚔️ Подкидной' : '🔄 Переводной'}</span>
+                <span class="px-2 py-0.5 rounded-lg bg-slate-900 ${s.cheating ? 'text-rose-300 border-rose-500/40' : 'text-emerald-300 border-slate-700'} text-[10px] font-bold border">${s.cheating ? '🎭 Шулер' : '🛡️ Честная'}</span>
+                <span class="px-2 py-0.5 rounded-lg bg-slate-900 text-amber-200 text-[10px] font-bold border border-slate-700">${s.allowDraw ? '🤝 Ничья' : '🏆 Классика'}</span>
+                <span class="px-2 py-0.5 rounded-lg bg-slate-900 text-slate-300 text-[10px] font-bold border border-slate-700">${s.throwRule === 'neighbors' ? '👥 Соседи' : '🌐 Все'}</span>
+            `;
+        }
+
+        function renderPublicSessions() {
+            const container = document.getElementById('public-sessions-list');
+            const filtered = ALL_SESSIONS.filter(s => {
+                if (s.isPrivate) return false;
+                if (s.bet < GAME_FILTERS.minBet || s.bet > GAME_FILTERS.maxBet) return false;
+                if (GAME_FILTERS.players !== 'any' && s.maxPlayers !== GAME_FILTERS.players) return false;
+                if (GAME_FILTERS.deckSize !== 'any' && s.deckSize !== GAME_FILTERS.deckSize) return false;
+                if (GAME_FILTERS.mode !== 'any' && s.mode !== GAME_FILTERS.mode) return false;
+                if (GAME_FILTERS.cheating !== 'any' && s.cheating !== GAME_FILTERS.cheating) return false;
+                if (GAME_FILTERS.allowDraw !== 'any' && s.allowDraw !== GAME_FILTERS.allowDraw) return false;
+                if (GAME_FILTERS.throwRule !== 'any' && s.throwRule !== GAME_FILTERS.throwRule) return false;
+                return true;
+            });
+
+            document.getElementById('games-filter-summary').textContent =
+                `Ставка ${formatCompactNumber(GAME_FILTERS.minBet)}–${formatCompactNumber(GAME_FILTERS.maxBet)} 🪙 • Найдено: ${filtered.length}`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-slate-800/60 border border-slate-700/70 rounded-2xl p-6 text-center space-y-2 my-4">
+                        <div class="text-3xl">🔍</div>
+                        <div class="text-xs font-bold text-white">Столов с такими фильтрами пока нет</div>
+                        <p class="text-[11px] text-slate-400">Сбросьте фильтры или создайте свой стол с этими правилами</p>
+                        <button onclick="resetGameFilters()" class="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">Сбросить фильтры</button>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(s => `
+                <div class="bg-slate-800/85 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3 space-y-2 transition">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-lg">${s.avatar}</div>
+                            <div>
+                                <div class="text-xs font-black text-white">${s.title}</div>
+                                <div class="text-[10px] text-slate-400 font-semibold">${s.host} • <span class="text-amber-300">${s.rank}</span></div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs font-black text-amber-400">${formatCompactNumber(s.bet)} 🪙</div>
+                            <div class="text-[10px] text-emerald-400 font-bold">👤 ${s.curPlayers}/${s.maxPlayers} игр.</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-700/60">
+                        <div class="flex flex-wrap gap-1">${getSessionBadgesHTML(s)}</div>
+                        <button onclick="joinSessionById(${s.id})" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs active:scale-95 transition">
+                            Войти
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPrivateSessions() {
+            const container = document.getElementById('private-sessions-list');
+            const privates = ALL_SESSIONS.filter(s => s.isPrivate);
+            container.innerHTML = privates.map(s => `
+                <div class="bg-slate-800/85 border border-indigo-500/30 rounded-2xl p-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-950/80 border border-indigo-500/40 flex items-center justify-center text-lg">🔒</div>
+                            <div>
+                                <div class="text-xs font-black text-white">${s.title}</div>
+                                <div class="text-[10px] text-slate-400">Создатель: ${s.host} • PIN для теста: <b class="text-amber-300">${s.password}</b></div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs font-black text-amber-400">${formatCompactNumber(s.bet)} 🪙</div>
+                            <div class="text-[10px] text-indigo-300 font-bold">👤 ${s.curPlayers}/${s.maxPlayers}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-700/60">
+                        <div class="flex flex-wrap gap-1">${getSessionBadgesHTML(s)}</div>
+                        <button onclick="promptPrivateJoin(${s.id})" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-black text-xs active:scale-95 transition">
+                            Ввести PIN
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ===================== 3. ФИЛЬТРЫ И СОЗДАНИЕ СТОЛА =====================
+        function renderFiltersModal() {
+            const body = document.getElementById('filters-modal-body');
+            const btnClass = (active) => active
+                ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-black'
+                : 'bg-slate-800 text-slate-300 border-slate-700 font-semibold';
+
+            body.innerHTML = `
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-300">Диапазон ставки (100 – 10M 🪙)</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <span class="text-[10px] text-slate-400">От (мин):</span>
+                            <select onchange="GAME_FILTERS.minBet = Number(this.value)" class="w-full mt-1 bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white font-bold">
+                                ${BET_PRESETS.map(b => `<option value="${b}" ${GAME_FILTERS.minBet === b ? 'selected' : ''}>${formatCompactNumber(b)} 🪙</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400">До (макс):</span>
+                            <select onchange="GAME_FILTERS.maxBet = Number(this.value)" class="w-full mt-1 bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white font-bold">
+                                ${BET_PRESETS.map(b => `<option value="${b}" ${GAME_FILTERS.maxBet === b ? 'selected' : ''}>${formatCompactNumber(b)} 🪙</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-300">Количество игроков (2–6)</label>
+                    <div class="grid grid-cols-6 gap-1">
+                        <button onclick="GAME_FILTERS.players='any'; renderFiltersModal()" class="py-1.5 rounded-xl text-[11px] border ${btnClass(GAME_FILTERS.players==='any')}">Все</button>
+                        ${[2,3,4,5,6].map(n => `<button onclick="GAME_FILTERS.players=${n}; renderFiltersModal()" class="py-1.5 rounded-xl text-xs border ${btnClass(GAME_FILTERS.players===n)}">${n}</button>`).join('')}
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-300">Карт в колоде</label>
+                    <div class="grid grid-cols-4 gap-1.5">
+                        <button onclick="GAME_FILTERS.deckSize='any'; renderFiltersModal()" class="py-1.5 rounded-xl text-xs border ${btnClass(GAME_FILTERS.deckSize==='any')}">Любая</button>
+                        ${[24,36,52].map(d => `<button onclick="GAME_FILTERS.deckSize=${d}; renderFiltersModal()" class="py-1.5 rounded-xl text-xs border ${btnClass(GAME_FILTERS.deckSize===d)}">${d}</button>`).join('')}
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-300">Режим игры</label>
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <button onclick="GAME_FILTERS.mode='any'; renderFiltersModal()" class="py-1.5 rounded-xl text-[11px] border ${btnClass(GAME_FILTERS.mode==='any')}">Все</button>
+                        <button onclick="GAME_FILTERS.mode='podkidnoy'; renderFiltersModal()" class="py-1.5 rounded-xl text-[11px] border ${btnClass(GAME_FILTERS.mode==='podkidnoy')}">⚔️ Подкидной</button>
+                        <button onclick="GAME_FILTERS.mode='perevodnoy'; renderFiltersModal()" class="py-1.5 rounded-xl text-[11px] border ${btnClass(GAME_FILTERS.mode==='perevodnoy')}">🔄 Переводной</button>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-300">Шулерство / Честная игра</label>
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <button onclick="GAME_FILTERS.cheating='any'; renderFiltersModal()" class="py-1.5 rounded-xl text-[11px] border ${btnClass(GAME_FILTERS.cheating==='any')}">Все</button>
+                        <button onclick="GAME_FILTERS.cheating=false; renderFiltersModal()" class="py-1.5 rounded-xl text-[11px] border ${btnClass(GAME_FILTERS.cheating===false)}">🛡️ Честная</button>
+                        <button onclick="GAME_FILTERS.cheating=true; renderFiltersModal()" class="py-1.5 rounded-xl text-[11px] border ${btnClass(GAME_FILTERS.cheating===true)}">🎭 С шулером</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-slate-300">Финал игры</label>
+                        <div class="grid grid-cols-3 gap-1">
+                            <button onclick="GAME_FILTERS.allowDraw='any'; renderFiltersModal()" class="py-1.5 rounded-lg text-[10px] border ${btnClass(GAME_FILTERS.allowDraw==='any')}">Все</button>
+                            <button onclick="GAME_FILTERS.allowDraw=false; renderFiltersModal()" class="py-1.5 rounded-lg text-[10px] border ${btnClass(GAME_FILTERS.allowDraw===false)}">Классика</button>
+                            <button onclick="GAME_FILTERS.allowDraw=true; renderFiltersModal()" class="py-1.5 rounded-lg text-[10px] border ${btnClass(GAME_FILTERS.allowDraw===true)}">Ничья</button>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-slate-300">Подкидывание</label>
+                        <div class="grid grid-cols-3 gap-1">
+                            <button onclick="GAME_FILTERS.throwRule='any'; renderFiltersModal()" class="py-1.5 rounded-lg text-[10px] border ${btnClass(GAME_FILTERS.throwRule==='any')}">Все</button>
+                            <button onclick="GAME_FILTERS.throwRule='neighbors'; renderFiltersModal()" class="py-1.5 rounded-lg text-[10px] border ${btnClass(GAME_FILTERS.throwRule==='neighbors')}">Соседи</button>
+                            <button onclick="GAME_FILTERS.throwRule='all'; renderFiltersModal()" class="py-1.5 rounded-lg text-[10px] border ${btnClass(GAME_FILTERS.throwRule==='all')}">Все</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function applyGameFilters() {
+            closeModal('filters');
+            renderPublicSessions();
+            showToast('Фильтры применены');
+        }
+
+        function resetGameFilters() {
+            GAME_FILTERS = { minBet: 100, maxBet: 10000000, players: 'any', deckSize: 'any', mode: 'any', cheating: 'any', allowDraw: 'any', throwRule: 'any' };
+            renderFiltersModal();
+            renderPublicSessions();
+        }
+
+        let CREATE_FORM = {
+            bet: 250,
+            maxPlayers: 2,
+            deckSize: 36,
+            mode: 'podkidnoy',
+            cheating: false,
+            allowDraw: false,
+            throwRule: 'neighbors',
+            isPrivate: false
+        };
+
+        function renderCreateScreenControls() {
+            document.getElementById('create-bet-display').textContent = `${formatCompactNumber(CREATE_FORM.bet)} 🪙`;
+            document.getElementById('create-bet-grid').innerHTML = BET_PRESETS.map(b => `
+                <button onclick="CREATE_FORM.bet=${b}; renderCreateScreenControls()" class="py-1.5 rounded-xl text-[11px] font-extrabold border transition ${CREATE_FORM.bet === b ? 'bg-amber-400 text-slate-950 border-amber-300' : 'bg-slate-900 text-slate-300 border-slate-700'}">
+                    ${formatCompactNumber(b)}
+                </button>
+            `).join('');
+
+            document.getElementById('create-players-grid').innerHTML = [2,3,4,5,6].map(p => `
+                <button onclick="CREATE_FORM.maxPlayers=${p}; renderCreateScreenControls()" class="py-1.5 rounded-xl text-xs font-extrabold border ${CREATE_FORM.maxPlayers === p ? 'bg-emerald-500 text-slate-950 border-emerald-400' : 'bg-slate-900 text-slate-300 border-slate-700'}">${p}</button>
+            `).join('');
+
+            document.getElementById('create-deck-grid').innerHTML = [24,36,52].map(d => `
+                <button onclick="CREATE_FORM.deckSize=${d}; renderCreateScreenControls()" class="py-1.5 rounded-xl text-xs font-extrabold border ${CREATE_FORM.deckSize === d ? 'bg-emerald-500 text-slate-950 border-emerald-400' : 'bg-slate-900 text-slate-300 border-slate-700'}">${d}</button>
+            `).join('');
+
+            const activeCls = 'bg-emerald-500 text-slate-950 border-emerald-400';
+            const idleCls = 'bg-slate-900 text-slate-300 border-slate-700';
+
+            document.getElementById('cr-mode-podkidnoy').className = `py-2 rounded-xl text-xs font-extrabold border ${CREATE_FORM.mode === 'podkidnoy' ? activeCls : idleCls}`;
+            document.getElementById('cr-mode-perevodnoy').className = `py-2 rounded-xl text-xs font-extrabold border ${CREATE_FORM.mode === 'perevodnoy' ? activeCls : idleCls}`;
+
+            document.getElementById('cr-cheat-fair').className = `py-2 rounded-xl text-xs font-extrabold border ${!CREATE_FORM.cheating ? activeCls : idleCls}`;
+            document.getElementById('cr-cheat-on').className = `py-2 rounded-xl text-xs font-extrabold border ${CREATE_FORM.cheating ? 'bg-rose-500 text-white border-rose-400' : idleCls}`;
+
+            document.getElementById('cr-end-classic').className = `py-2 rounded-xl text-[11px] font-extrabold border ${!CREATE_FORM.allowDraw ? activeCls : idleCls}`;
+            document.getElementById('cr-end-draw').className = `py-2 rounded-xl text-[11px] font-extrabold border ${CREATE_FORM.allowDraw ? activeCls : idleCls}`;
+
+            document.getElementById('cr-throw-neighbors').className = `py-2 rounded-xl text-[11px] font-extrabold border ${CREATE_FORM.throwRule === 'neighbors' ? activeCls : idleCls}`;
+            document.getElementById('cr-throw-all').className = `py-2 rounded-xl text-[11px] font-extrabold border ${CREATE_FORM.throwRule === 'all' ? activeCls : idleCls}`;
+        }
+
+        function setCreateOption(key, val) {
+            CREATE_FORM[key] = val;
+            renderCreateScreenControls();
+        }
+
+        function toggleCreatePrivate() {
+            const checked = document.getElementById('cr-private-check').checked;
+            CREATE_FORM.isPrivate = checked;
+            document.getElementById('cr-private-box').classList.toggle('hidden', !checked);
+        }
+
+        function openCreateWithPrivatePreset() {
+            switchScreen('create');
+            document.getElementById('cr-private-check').checked = true;
+            toggleCreatePrivate();
+        }
+
+        let activeWaitingRoom = null;
+        let pendingPrivateRoomId = null;
+
+        function submitCreateGame() {
+            if (STATE.coins < CREATE_FORM.bet) {
+                showToast('Недостаточно монет для выбранной ставки! Загляните в Магазин.');
+                openModal('shop');
+                return;
+            }
+            const titleInput = document.getElementById('cr-room-title').value.trim();
+            const passInput = document.getElementById('cr-room-pass').value.trim() || '7777';
+            const newRoom = {
+                id: Math.floor(300 + Math.random() * 600),
+                title: titleInput || (CREATE_FORM.isPrivate ? 'Приват для друзей' : `Стол #${Math.floor(100 + Math.random() * 899)}`),
+                host: 'Вы',
+                avatar: '😎',
+                rank: getRankObject(STATE.rp).name,
+                bet: CREATE_FORM.bet,
+                maxPlayers: CREATE_FORM.maxPlayers,
+                curPlayers: 1,
+                deckSize: CREATE_FORM.deckSize,
+                mode: CREATE_FORM.mode,
+                cheating: CREATE_FORM.cheating,
+                allowDraw: CREATE_FORM.allowDraw,
+                throwRule: CREATE_FORM.throwRule,
+                isPrivate: CREATE_FORM.isPrivate,
+                password: passInput
+            };
+            ALL_SESSIONS.unshift(newRoom);
+            activeWaitingRoom = newRoom;
+
+            document.getElementById('wait-room-title').textContent = newRoom.title;
+            document.getElementById('wait-room-desc').textContent =
+                `Ставка ${formatCompactNumber(newRoom.bet)} 🪙 • Колода ${newRoom.deckSize} • ${newRoom.mode === 'podkidnoy' ? 'Подкидной' : 'Переводной'} • ${newRoom.cheating ? 'С шулером 🎭' : 'Честная 🛡️'}`;
+            document.getElementById('wait-pass-pill').textContent = newRoom.isPrivate
+                ? `🔒 Приватный стол • PIN-пароль: ${newRoom.password}`
+                : `🌐 Открытый стол • Ожидание соперника`;
+            openModal('waiting');
+        }
+
+        function copyTextToClipboard(text) {
+            const area = document.createElement('textarea');
+            area.value = text;
+            document.body.appendChild(area);
+            area.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(area);
+        }
+
+        function shareTelegramInvite() {
+            if (!activeWaitingRoom) return;
+            const botUser = ADMIN_CONFIG.botUsername || 'durak_online_bot';
+            const startParam = `room_${activeWaitingRoom.id}_${activeWaitingRoom.isPrivate ? activeWaitingRoom.password : 'open'}`;
+            const miniAppUrl = `https://t.me/${botUser}?startapp=${startParam}`;
+            const passText = activeWaitingRoom.isPrivate ? ` (PIN-пароль: ${activeWaitingRoom.password})` : '';
+            const inviteText = `🃏 Заходи ко мне за стол в «Дурак Онлайн»! Комната #${activeWaitingRoom.id}${passText}, ставка ${formatCompactNumber(activeWaitingRoom.bet)} 🪙, колода ${activeWaitingRoom.deckSize} карт!`;
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(miniAppUrl)}&text=${encodeURIComponent(inviteText)}`;
+
+            triggerHaptic('light');
+            copyTextToClipboard(`${inviteText}\n${miniAppUrl}`);
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+                window.Telegram.WebApp.openTelegramLink(shareUrl);
+            } else {
+                window.open(shareUrl, '_blank');
+            }
+            showToast('✈️ Выбор чата открыт в Telegram!');
+        }
+
+        function copyRoomInviteLink() {
+            if (!activeWaitingRoom) return;
+            const passText = activeWaitingRoom.isPrivate ? ` | Пароль: ${activeWaitingRoom.password}` : '';
+            const link = `https://t.me/durak_online_bot/app?startapp=room_${activeWaitingRoom.id}${passText}`;
+            copyTextToClipboard(link);
+            showToast('🔗 Ссылка и PIN скопированы!');
+        }
+
+        function startWaitingRoomNow() {
+            if (!activeWaitingRoom) return;
+            const room = activeWaitingRoom;
+            closeModal('waiting');
+            startNewGame(room);
+        }
+
+        function promptPrivateJoin(id) {
+            const room = ALL_SESSIONS.find(s => s.id === id);
+            if (!room) return;
+            pendingPrivateRoomId = id;
+            document.getElementById('pass-modal-room').textContent = `${room.title} • Ставка ${formatCompactNumber(room.bet)} 🪙 (подсказка для теста: ${room.password})`;
+            document.getElementById('pass-modal-input').value = '';
+            openModal('password');
+        }
+
+        function confirmPrivateJoin() {
+            const room = ALL_SESSIONS.find(s => s.id === pendingPrivateRoomId);
+            if (!room) return;
+            const entered = document.getElementById('pass-modal-input').value.trim();
+            if (entered !== room.password) {
+                showToast('❌ Неверный PIN-пароль!');
+                return;
+            }
+            closeModal('password');
+            joinSessionById(room.id);
+        }
+
+        function joinSessionById(id) {
+            const room = ALL_SESSIONS.find(s => s.id === id);
+            if (!room) return;
+            if (STATE.coins < room.bet) {
+                showToast(`Недостаточно монет для ставки ${formatCompactNumber(room.bet)} 🪙!`);
+                openModal('shop');
+                return;
+            }
+            startNewGame(room);
+        }
+
+        function startQuickMatch() {
+            const bet = STATE.coins >= 150 ? 150 : 100;
+            if (STATE.coins < 100) {
+                showToast('У вас меньше 100 🪙! Нажмите «Забрать» для пополнения до 1 500 🪙.');
+                return;
+            }
+            startNewGame({
+                id: 999,
+                title: 'Быстрая игра',
+                host: 'Максим_Про',
+                avatar: '🦊',
+                rank: 'Золото',
+                bet: bet,
+                maxPlayers: 2,
+                deckSize: 36,
+                mode: 'podkidnoy',
+                cheating: false,
+                allowDraw: false,
+                throwRule: 'neighbors'
+            });
+        }
+
+        // ===================== 4. ДВИЖОК «ДУРАК ОНЛАЙН» + ПЛАВНАЯ GPU-АНИМАЦИЯ + ШУЛЕРСТВО =====================
+        const SUITS = [
+            { id: 's', symbol: '♠', color: 'text-slate-900 dark:text-white', isRed: false },
+            { id: 'c', symbol: '♣', color: 'text-slate-900 dark:text-white', isRed: false },
+            { id: 'h', symbol: '♥', color: 'text-rose-600', isRed: true },
+            { id: 'd', symbol: '♦', color: 'text-rose-600', isRed: true }
+        ];
+
+        let MATCH = null;
+
+        function buildDeckBySize(deckSize) {
+            let ranks = [];
+            if (deckSize === 24) {
+                ranks = [
+                    { v: 9, l: '9' }, { v: 10, l: '10' }, { v: 11, l: 'J' },
+                    { v: 12, l: 'Q' }, { v: 13, l: 'K' }, { v: 14, l: 'A' }
+                ];
+            } else if (deckSize === 52) {
+                ranks = [
+                    { v: 2, l: '2' }, { v: 3, l: '3' }, { v: 4, l: '4' }, { v: 5, l: '5' },
+                    { v: 6, l: '6' }, { v: 7, l: '7' }, { v: 8, l: '8' }, { v: 9, l: '9' },
+                    { v: 10, l: '10' }, { v: 11, l: 'J' }, { v: 12, l: 'Q' }, { v: 13, l: 'K' }, { v: 14, l: 'A' }
+                ];
+            } else {
+                ranks = [
+                    { v: 6, l: '6' }, { v: 7, l: '7' }, { v: 8, l: '8' }, { v: 9, l: '9' },
+                    { v: 10, l: '10' }, { v: 11, l: 'J' }, { v: 12, l: 'Q' }, { v: 13, l: 'K' }, { v: 14, l: 'A' }
+                ];
+            }
+            const deck = [];
+            for (const s of SUITS) {
+                for (const r of ranks) {
+                    deck.push({
+                        uid: `${r.l}${s.id}_${Math.random().toString(36).slice(2, 6)}`,
+                        value: r.v,
+                        label: r.l,
+                        suit: s.id,
+                        symbol: s.symbol,
+                        isRed: s.isRed
+                    });
+                }
+            }
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+
+        function canCardBeatStrict(attackCard, defendCard, trumpSuit) {
+            if (defendCard.suit === attackCard.suit) {
+                return defendCard.value > attackCard.value;
+            }
+            return defendCard.suit === trumpSuit && attackCard.suit !== trumpSuit;
+        }
+
+        function getTableRanksSet() {
+            const set = new Set();
+            if (!MATCH) return set;
+            for (const pair of MATCH.table) {
+                set.add(pair.attack.value);
+                if (pair.defend) set.add(pair.defend.value);
+            }
+            return set;
+        }
+
+        function animateCardFlight(fromRect, toRect, cardData, faceUp = true, rotDeg = 0) {
+            if (!fromRect || !toRect) return;
+            const layer = document.getElementById('flying-layer');
+            const el = document.createElement('div');
+            const backSkin = SKINS_CATALOG.find(s => s.id === STATE.equipped.back)?.css || 'back-classic';
+            const faceSkin = SKINS_CATALOG.find(s => s.id === STATE.equipped.face)?.css || 'face-classic';
+
+            el.className = `flying-card ${faceUp && cardData ? faceSkin : backSkin}`;
+            if (faceUp && cardData) {
+                const textColor = cardData.isRed ? 'text-rose-500' : (faceSkin === 'face-dark' ? 'text-white' : 'text-slate-900');
+                el.innerHTML = `
+                    <div class="p-1.5 h-full flex flex-col justify-between ${textColor}">
+                        <div class="text-xs font-black leading-none">${cardData.label}${cardData.symbol}</div>
+                        <div class="text-2xl self-center">${cardData.symbol}</div>
+                        <div class="text-[10px] font-bold self-end rotate-180 leading-none">${cardData.label}</div>
+                    </div>`;
+            }
+
+            el.style.transform = `translate3d(${fromRect.left}px, ${fromRect.top}px, 0) scale(0.88) rotate(0deg)`;
+            layer.appendChild(el);
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    el.style.transform = `translate3d(${toRect.left}px, ${toRect.top}px, 0) scale(1) rotate(${rotDeg}deg)`;
+                });
+            });
+
+            setTimeout(() => {
+                el.remove();
+            }, 290);
+        }
+
+        function startNewGame(roomConfig) {
+            STATE.coins -= roomConfig.bet;
+            ADMIN_CONFIG.totalGamesPlayed += 1;
+            saveProfile();
+
+            const deck = buildDeckBySize(roomConfig.deckSize || 36);
+            const trumpCard = deck[0];
+            const playerHand = deck.splice(deck.length - 6, 6);
+            const oppHand = deck.splice(deck.length - 6, 6);
+
+            MATCH = {
+                room: roomConfig,
+                bet: roomConfig.bet,
+                pot: roomConfig.bet * 2,
+                deck,
+                trumpCard,
+                trumpSuit: trumpCard.suit,
+                playerHand,
+                oppHand,
+                table: [],
+                turn: 'player',
+                defenderTaking: false,
+                playerTookAny: false,
+                lastPlayerAttackCard: null,
+                playerCanCheat: !!roomConfig.cheating,
+                oppCanCheat: !!roomConfig.cheating,
+                unpunishedPlayerCheat: false,
+                activeOppCheatIndex: null,
+                finished: false
+            };
+
+            const feltCss = SKINS_CATALOG.find(s => s.id === STATE.equipped.felt)?.css || 'felt-emerald';
+            const tableEl = document.getElementById('screen-table');
+            tableEl.className = `absolute inset-0 z-40 flex flex-col justify-between p-2.5 transition-colors duration-300 ${feltCss}`;
+
+            document.getElementById('table-opp-avatar').textContent = roomConfig.avatar || '🤖';
+            document.getElementById('table-opp-name').textContent = roomConfig.host === 'Вы' ? 'Соперник_ТГ' : roomConfig.host;
+            document.getElementById('table-opp-rank').textContent = roomConfig.rank || 'Золото';
+            document.getElementById('table-pot').textContent = MATCH.pot.toLocaleString('ru-RU');
+            document.getElementById('table-rules-line').textContent =
+                `${roomConfig.mode === 'perevodnoy' ? 'Переводной' : 'Подкидной'} • ${roomConfig.deckSize} карт • ${roomConfig.allowDraw ? 'Ничья' : 'Классика'}`;
+
+            renderTableState();
+
+            setTimeout(() => {
+                const deckRect = document.getElementById('deck-anchor').getBoundingClientRect();
+                const playerRect = document.getElementById('player-hand-fan').getBoundingClientRect();
+                const oppRect = document.getElementById('opp-hand-fan').getBoundingClientRect();
+                for (let i = 0; i < 4; i++) {
+                    setTimeout(() => {
+                        animateCardFlight(deckRect, { left: playerRect.left + 110 + i * 22, top: playerRect.top + 10 }, MATCH.playerHand[i], true, (i - 2) * 5);
+                        animateCardFlight(deckRect, { left: oppRect.left + 90 + i * 16, top: oppRect.top }, null, false, 0);
+                    }, i * 55);
+                }
+            }, 50);
+        }
+
+        function sortPlayerCards(hand, trumpSuit) {
+            hand.sort((a, b) => {
+                const aT = a.suit === trumpSuit ? 1 : 0;
+                const bT = b.suit === trumpSuit ? 1 : 0;
+                if (aT !== bT) return aT - bT;
+                return a.value - b.value;
+            });
+        }
+
+        function isCardLegalForPlayer(card) {
+            if (!MATCH || MATCH.finished) return false;
+            const uncovered = MATCH.table.find(p => !p.defend);
+
+            if (MATCH.turn === 'player') {
+                if (MATCH.table.length >= 6 || MATCH.oppHand.length === 0) return false;
+                if (MATCH.table.length === 0) return true;
+                const ranks = getTableRanksSet();
+                return ranks.has(card.value);
+            } else {
+                if (!uncovered || MATCH.defenderTaking) return false;
+                if (canCardBeatStrict(uncovered.attack, card, MATCH.trumpSuit)) return true;
+                if (
+                    MATCH.room.mode === 'perevodnoy' &&
+                    MATCH.table.every(p => !p.defend) &&
+                    card.value === uncovered.attack.value &&
+                    MATCH.oppHand.length >= MATCH.table.length + 1
+                ) {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        function renderTableState() {
+            if (!MATCH) return;
+            const backCss = SKINS_CATALOG.find(s => s.id === STATE.equipped.back)?.css || 'back-classic';
+            const faceCss = SKINS_CATALOG.find(s => s.id === STATE.equipped.face)?.css || 'face-classic';
+
+            // 1. Колода и козырь
+            const deckCount = MATCH.deck.length;
+            const deckBox = document.getElementById('deck-pile-box');
+            const trumpBox = document.getElementById('trump-card-box');
+            const emptyWatermark = document.getElementById('empty-trump-watermark');
+
+            const trumpColor = MATCH.trumpCard.isRed ? 'text-rose-500' : (faceCss === 'face-dark' ? 'text-white' : 'text-slate-900');
+            const pillColor = MATCH.trumpCard.isRed ? 'text-rose-400' : 'text-sky-300';
+            const pillTextEl = document.getElementById('trump-pill-text');
+            if (pillTextEl) {
+                pillTextEl.className = `${pillColor} font-black`;
+                pillTextEl.textContent = `${MATCH.trumpCard.label}${MATCH.trumpCard.symbol}`;
+            }
+
+            if (deckCount > 0) {
+                emptyWatermark.classList.add('hidden');
+                trumpBox.classList.remove('hidden');
+                trumpBox.className = `absolute left-7 top-6 w-14 h-20 rounded-lg shadow-lg flex flex-col justify-between p-1.5 -rotate-90 z-10 ${faceCss} ${trumpColor}`;
+                document.getElementById('trump-rank-label').textContent = MATCH.trumpCard.label;
+                document.getElementById('trump-suit-mini').textContent = MATCH.trumpCard.symbol;
+                document.getElementById('trump-suit-big').textContent = MATCH.trumpCard.symbol;
+
+                if (deckCount > 1) {
+                    deckBox.classList.remove('hidden');
+                    deckBox.className = `relative left-0 top-1 w-14 h-20 rounded-lg shadow-2xl flex items-center justify-center z-20 ${backCss}`;
+                    document.getElementById('deck-counter-badge').textContent = deckCount;
+                } else {
+                    deckBox.classList.add('hidden');
+                }
+            } else {
+                deckBox.classList.add('hidden');
+                trumpBox.classList.add('hidden');
+                emptyWatermark.classList.remove('hidden');
+                emptyWatermark.textContent = MATCH.trumpCard.symbol;
+                emptyWatermark.className = `absolute left-3 top-4 w-14 h-16 rounded-xl border-2 border-dashed border-white/25 flex items-center justify-center text-3xl opacity-60 ${MATCH.trumpCard.isRed ? 'text-rose-400' : 'text-white'}`;
+            }
+
+            // 2. Веер карт соперника
+            const oppFan = document.getElementById('opp-hand-fan');
+            const oppCount = MATCH.oppHand.length;
+            document.getElementById('opp-cards-counter').textContent = `${oppCount} карт`;
+            const oppOverlap = oppCount > 8 ? -20 : -12;
+            oppFan.innerHTML = MATCH.oppHand.map((_, idx) => {
+                const deg = (idx - (oppCount - 1) / 2) * 4;
+                return `<div style="margin-left:${idx === 0 ? 0 : oppOverlap}px; transform: rotate(${deg}deg)" class="w-8 h-12 rounded-md ${backCss} shadow-md"></div>`;
+            }).join('');
+
+            // 3. Поле боя на столе
+            const battleGrid = document.getElementById('battle-grid');
+            battleGrid.innerHTML = MATCH.table.map((pair) => {
+                const aCol = pair.attack.isRed ? 'text-rose-500' : (faceCss === 'face-dark' ? 'text-white' : 'text-slate-900');
+                let defHTML = '';
+                if (pair.defend) {
+                    const dCol = pair.defend.isRed ? 'text-rose-500' : (faceCss === 'face-dark' ? 'text-white' : 'text-slate-900');
+                    const cheatRing = pair.isIllegalCheat ? 'ring-2 ring-rose-400/70' : '';
+                    defHTML = `
+                        <div class="absolute top-3 left-3 w-14 h-20 rounded-lg ${faceCss} ${dCol} ${cheatRing} shadow-xl p-1 flex flex-col justify-between rotate-6 z-10">
+                            <div class="text-[11px] font-black leading-none">${pair.defend.label}${pair.defend.symbol}</div>
+                            <div class="text-xl self-center leading-none">${pair.defend.symbol}</div>
+                            <div class="text-[9px] font-bold self-end rotate-180 leading-none">${pair.defend.label}</div>
+                        </div>`;
+                }
+                return `
+                    <div class="relative w-16 h-24">
+                        <div class="w-14 h-20 rounded-lg ${faceCss} ${aCol} shadow-md p-1 flex flex-col justify-between -rotate-3">
+                            <div class="text-[11px] font-black leading-none">${pair.attack.label}${pair.attack.symbol}</div>
+                            <div class="text-xl self-center leading-none">${pair.attack.symbol}</div>
+                            <div class="text-[9px] font-bold self-end rotate-180 leading-none">${pair.attack.label}</div>
+                        </div>
+                        ${defHTML}
+                    </div>`;
+            }).join('');
+
+            // 4. Кнопки и баннер хода
+            const banner = document.getElementById('turn-banner');
+            const btnBito = document.getElementById('btn-bito');
+            const btnTake = document.getElementById('btn-take');
+            const btnTransfer = document.getElementById('btn-transfer');
+            const btnCatch = document.getElementById('btn-catch-cheater');
+
+            btnBito.classList.add('hidden');
+            btnTake.classList.add('hidden');
+            btnTransfer.classList.add('hidden');
+            btnCatch.classList.toggle('hidden', MATCH.activeOppCheatIndex === null);
+
+            document.getElementById('table-cheat-indicator').textContent = MATCH.room.cheating
+                ? (MATCH.playerCanCheat ? '🎭 Шулер включен' : '🚫 Шулерство раскрыто')
+                : '🛡️ Честная игра';
+
+            const uncovered = MATCH.table.find(p => !p.defend);
+
+            if (MATCH.turn === 'player') {
+                if (MATCH.defenderTaking) {
+                    banner.textContent = 'Соперник берет • Подкиньте еще или нажмите Пас';
+                    banner.className = 'px-3.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-xs font-extrabold text-amber-200 shadow';
+                    btnBito.textContent = '✅ Пас (пусть берет)';
+                    btnBito.classList.remove('hidden');
+                } else if (MATCH.table.length === 0) {
+                    banner.textContent = 'Ваш ход • Выберите карту для атаки';
+                    banner.className = 'px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-xs font-extrabold text-emerald-200 shadow';
+                } else if (!uncovered) {
+                    banner.textContent = 'Соперник отбился • Подкиньте или нажмите Бито';
+                    banner.className = 'px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-xs font-extrabold text-emerald-200 shadow';
+                    btnBito.textContent = '✅ Бито';
+                    btnBito.classList.remove('hidden');
+                } else {
+                    banner.textContent = 'Ожидание ответа соперника...';
+                }
+            } else {
+                if (uncovered && !MATCH.defenderTaking) {
+                    banner.textContent = 'Защита • Отбейтесь картой или возьмите';
+                    banner.className = 'px-3.5 py-1 rounded-full bg-amber-500/25 border border-amber-400/40 text-xs font-extrabold text-amber-200 shadow';
+                    btnTake.classList.remove('hidden');
+
+                    if (
+                        MATCH.room.mode === 'perevodnoy' &&
+                        MATCH.table.every(p => !p.defend) &&
+                        MATCH.playerHand.some(c => c.value === uncovered.attack.value) &&
+                        MATCH.oppHand.length >= MATCH.table.length + 1
+                    ) {
+                        btnTransfer.classList.remove('hidden');
+                    }
+                } else {
+                    banner.textContent = 'Ход соперника...';
+                }
+            }
+
+            // 5. Веер карт игрока внахлест (без скролла)
+            sortPlayerCards(MATCH.playerHand, MATCH.trumpSuit);
+            const fanContainer = document.getElementById('player-hand-fan');
+            const total = MATCH.playerHand.length;
+            const maxSpreadWidth = Math.min(window.innerWidth - 36, 360);
+            const cardW = 68;
+            const stepX = total <= 1 ? 0 : Math.min(40, (maxSpreadWidth - cardW) / (total - 1));
+
+            fanContainer.innerHTML = MATCH.playerHand.map((card, i) => {
+                const offsetFromCenter = i - (total - 1) / 2;
+                const xPos = offsetFromCenter * stepX;
+                const angle = offsetFromCenter * (total > 10 ? 2.4 : 4.2);
+                const archY = Math.abs(offsetFromCenter) * (total > 10 ? 1.8 : 3.2);
+
+                const legal = isCardLegalForPlayer(card);
+                const canPlayByCheat = !legal && MATCH.room.cheating && MATCH.playerCanCheat &&
+                    ((MATCH.turn === 'player' && MATCH.table.length < 6 && MATCH.oppHand.length > 0) ||
+                     (MATCH.turn === 'opp' && uncovered));
+
+                const liftY = legal ? -10 : 0;
+                const col = card.isRed ? 'text-rose-500' : (faceCss === 'face-dark' ? 'text-white' : 'text-slate-900');
+                const borderHighlight = legal ? 'playable-card' : (canPlayByCheat ? 'cheat-card' : 'opacity-90');
+
+                return `
+                    <div id="pcard-${card.uid}"
+                         onclick="onPlayerCardClick('${card.uid}', event)"
+                         style="transform: translate3d(${xPos}px, ${archY + liftY}px, 0) rotate(${angle}deg); z-index: ${i + 10};"
+                         class="hand-fan-card ${faceCss} ${col} ${borderHighlight} p-1.5 flex flex-col justify-between">
+                        <div class="flex items-center justify-between leading-none">
+                            <span class="text-xs font-black">${card.label}</span>
+                            <span class="text-xs">${card.symbol}</span>
+                        </div>
+                        <div class="text-2xl self-center leading-none">${card.symbol}</div>
+                        <div class="flex items-center justify-between leading-none rotate-180">
+                            <span class="text-[10px] font-bold">${card.label}</span>
+                            <span class="text-[10px]">${card.symbol}</span>
+                        </div>
+                        ${card.suit === MATCH.trumpSuit ? '<span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400"></span>' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function onPlayerCardClick(cardUid, evt) {
+            if (!MATCH || MATCH.finished) return;
+            const idx = MATCH.playerHand.findIndex(c => c.uid === cardUid);
+            if (idx === -1) return;
+            const card = MATCH.playerHand[idx];
+            const legal = isCardLegalForPlayer(card);
+            const uncovered = MATCH.table.find(p => !p.defend);
+
+            let usedCheat = false;
+            if (!legal) {
+                if (MATCH.room.cheating && MATCH.playerCanCheat) {
+                    usedCheat = true;
+                } else {
+                    showToast(MATCH.room.cheating && !MATCH.playerCanCheat
+                        ? 'Вас уже поймали на шулерстве — теперь ходите только по правилам!'
+                        : 'Этой картой сейчас ходить нельзя по правилам');
+                    return;
+                }
+            }
+
+            const cardEl = evt?.currentTarget || document.getElementById(`pcard-${cardUid}`);
+            const fromRect = cardEl ? cardEl.getBoundingClientRect() : null;
+            const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
+
+            if (MATCH.turn === 'player') {
+                if (MATCH.table.length >= 6 || MATCH.oppHand.length === 0) return;
+                MATCH.playerHand.splice(idx, 1);
+                MATCH.lastPlayerAttackCard = card;
+                MATCH.table.push({ attack: card, defend: null, isIllegalCheat: usedCheat });
+
+                if (fromRect) {
+                    animateCardFlight(fromRect, { left: battleRect.left + 40 + (MATCH.table.length - 1) * 55, top: battleRect.top + 20 }, card, true, -4);
+                }
+
+                // Проверка: заметит ли бот шулерство игрока (шанс 55%)
+                if (usedCheat) {
+                    if (Math.random() < 0.55) {
+                        setTimeout(() => {
+                            if (!MATCH || MATCH.finished) return;
+                            const popped = MATCH.table.pop();
+                            if (popped) MATCH.playerHand.push(popped.attack);
+                            MATCH.playerCanCheat = false;
+                            sendTableEmoji('🚨', true);
+                            showToast('🚨 Соперник поймал вас на шулерстве! Карта возвращена.');
+                            renderTableState();
+                        }, 480);
+                        renderTableState();
+                        return;
+                    } else {
+                        MATCH.unpunishedPlayerCheat = true;
+                        unlockAchievement('sleight_hand');
+                    }
+                }
+
+                renderTableState();
+                if (checkMatchWinner()) return;
+
+                if (MATCH.defenderTaking) {
+                    return;
+                }
+                setTimeout(() => botDefendTurn(), 520);
+            } else {
+                // Игрок защищается
+                if (!uncovered || MATCH.defenderTaking) return;
+
+                // Если это перевод
+                if (
+                    !usedCheat &&
+                    MATCH.room.mode === 'perevodnoy' &&
+                    MATCH.table.every(p => !p.defend) &&
+                    card.value === uncovered.attack.value &&
+                    !canCardBeatStrict(uncovered.attack, card, MATCH.trumpSuit)
+                ) {
+                    executeTransferWithCard(idx, fromRect);
+                    return;
+                }
+
+                MATCH.playerHand.splice(idx, 1);
+                uncovered.defend = card;
+                uncovered.isIllegalCheat = usedCheat;
+
+                if (fromRect) {
+                    animateCardFlight(fromRect, { left: battleRect.left + 60, top: battleRect.top + 25 }, card, true, 6);
+                }
+
+                if (usedCheat) {
+                    if (Math.random() < 0.55) {
+                        setTimeout(() => {
+                            if (!MATCH || MATCH.finished) return;
+                            const returnedCard = uncovered.defend;
+                            uncovered.defend = null;
+                            uncovered.isIllegalCheat = false;
+                            if (returnedCard) MATCH.playerHand.push(returnedCard);
+                            MATCH.playerCanCheat = false;
+                            sendTableEmoji('🚨', true);
+                            showToast('🚨 Соперник заметил шулерскую защиту! Отбейтесь честно.');
+                            renderTableState();
+                        }, 480);
+                        renderTableState();
+                        return;
+                    } else {
+                        MATCH.unpunishedPlayerCheat = true;
+                        unlockAchievement('sleight_hand');
+                    }
+                }
+
+                renderTableState();
+                if (checkMatchWinner()) return;
+                setTimeout(() => botThrowInOrBito(), 560);
+            }
+        }
+
+        function handleTransferAction() {
+            if (!MATCH || MATCH.turn !== 'opp') return;
+            const uncovered = MATCH.table.find(p => !p.defend);
+            if (!uncovered) return;
+            const idx = MATCH.playerHand.findIndex(c => c.value === uncovered.attack.value);
+            if (idx === -1) return;
+            const el = document.getElementById(`pcard-${MATCH.playerHand[idx].uid}`);
+            executeTransferWithCard(idx, el ? el.getBoundingClientRect() : null);
+        }
+
+        function executeTransferWithCard(handIdx, fromRect) {
+            const card = MATCH.playerHand.splice(handIdx, 1)[0];
+            const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
+            if (fromRect) {
+                animateCardFlight(fromRect, { left: battleRect.left + 90, top: battleRect.top + 20 }, card, true, 0);
+            }
+            MATCH.table.push({ attack: card, defend: null });
+            MATCH.turn = 'player';
+            showToast('🔄 Вы перевели ход на соперника!');
+            renderTableState();
+            setTimeout(() => botDefendTurn(), 580);
+        }
+
+        function botDefendTurn() {
+            if (!MATCH || MATCH.finished || MATCH.turn !== 'player') return;
+            const uncoveredIndex = MATCH.table.findIndex(p => !p.defend);
+            if (uncoveredIndex === -1) return;
+            const uncovered = MATCH.table[uncoveredIndex];
+
+            sortPlayerCards(MATCH.oppHand, MATCH.trumpSuit);
+            let chosenIdx = MATCH.oppHand.findIndex(c => canCardBeatStrict(uncovered.attack, c, MATCH.trumpSuit));
+            let isBotCheating = false;
+
+            // Если у бота нет подходящей карты (или есть только высокий козырь), а режим «С шулером» включен — бот может схитрить!
+            if (
+                MATCH.room.cheating &&
+                MATCH.oppCanCheat &&
+                MATCH.oppHand.length > 0 &&
+                (chosenIdx === -1 || (MATCH.oppHand[chosenIdx].suit === MATCH.trumpSuit && Math.random() < 0.45))
+            ) {
+                const fakeIdx = MATCH.oppHand.findIndex(c => !canCardBeatStrict(uncovered.attack, c, MATCH.trumpSuit));
+                if (fakeIdx !== -1 && Math.random() < 0.65) {
+                    chosenIdx = fakeIdx;
+                    isBotCheating = true;
+                }
+            }
+
+            if (chosenIdx !== -1) {
+                const defCard = MATCH.oppHand.splice(chosenIdx, 1)[0];
+                const oppRect = document.getElementById('opp-hand-fan').getBoundingClientRect();
+                const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
+                animateCardFlight(oppRect, { left: battleRect.left + 60, top: battleRect.top + 24 }, defCard, true, 8);
+
+                uncovered.defend = defCard;
+                uncovered.isIllegalCheat = isBotCheating;
+                MATCH.activeOppCheatIndex = isBotCheating ? uncoveredIndex : null;
+
+                renderTableState();
+                checkMatchWinner();
+            } else {
+                MATCH.defenderTaking = true;
+                sendTableEmoji('😤', true);
+                showToast('Соперник забирает карты! Можете подкинуть еще или нажать Пас.');
+                renderTableState();
+            }
+        }
+
+        function catchOpponentCheating() {
+            if (!MATCH || MATCH.activeOppCheatIndex === null) return;
+            const pair = MATCH.table[MATCH.activeOppCheatIndex];
+            if (pair && pair.defend && pair.isIllegalCheat) {
+                const returned = pair.defend;
+                pair.defend = null;
+                pair.isIllegalCheat = false;
+                MATCH.oppHand.push(returned);
+                MATCH.oppCanCheat = false;
+                MATCH.activeOppCheatIndex = null;
+                unlockAchievement('catch_cheat');
+                sendTableEmoji('😱', true);
+                showToast('🚨 Вы поймали соперника на шулерстве! Ему запрещено шулерить до конца игры.');
+                renderTableState();
+                setTimeout(() => botDefendTurn(), 550);
+            }
+        }
+
+        function handleBitoAction() {
+            if (!MATCH || MATCH.finished || MATCH.turn !== 'player') return;
+            MATCH.activeOppCheatIndex = null;
+
+            const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
+            const discardRect = document.getElementById('discard-anchor').getBoundingClientRect();
+            const oppRect = document.getElementById('opp-hand-fan').getBoundingClientRect();
+
+            if (MATCH.defenderTaking) {
+                for (const pair of MATCH.table) {
+                    MATCH.oppHand.push(pair.attack);
+                    if (pair.defend) MATCH.oppHand.push(pair.defend);
+                }
+                animateCardFlight(battleRect, oppRect, null, false, 12);
+                MATCH.table = [];
+                MATCH.defenderTaking = false;
+                refillBothHands('player');
+                MATCH.turn = 'player';
+                renderTableState();
+                checkMatchWinner();
+            } else {
+                animateCardFlight(battleRect, discardRect, null, false, 20);
+                MATCH.table = [];
+                refillBothHands('player');
+                MATCH.turn = 'opp';
+                renderTableState();
+                if (!checkMatchWinner()) {
+                    setTimeout(() => botStartAttack(), 600);
+                }
+            }
+        }
+
+        function handleTakeAction() {
+            if (!MATCH || MATCH.finished || MATCH.turn !== 'opp') return;
+            MATCH.playerTookAny = true;
+            MATCH.activeOppCheatIndex = null;
+            const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
+            const playerRect = document.getElementById('player-hand-fan').getBoundingClientRect();
+
+            for (const pair of MATCH.table) {
+                MATCH.playerHand.push(pair.attack);
+                if (pair.defend) MATCH.playerHand.push(pair.defend);
+            }
+            animateCardFlight(battleRect, { left: playerRect.left + 130, top: playerRect.top + 15 }, null, false, -8);
+
+            MATCH.table = [];
+            refillBothHands('opp');
+            MATCH.turn = 'opp';
+            renderTableState();
+            if (!checkMatchWinner()) {
+                setTimeout(() => botStartAttack(), 650);
+            }
+        }
+
+        function botStartAttack() {
+            if (!MATCH || MATCH.finished || MATCH.turn !== 'opp') return;
+            if (MATCH.oppHand.length === 0 || MATCH.playerHand.length === 0) {
+                checkMatchWinner();
+                return;
+            }
+            sortPlayerCards(MATCH.oppHand, MATCH.trumpSuit);
+            const card = MATCH.oppHand.shift();
+            const oppRect = document.getElementById('opp-hand-fan').getBoundingClientRect();
+            const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
+            animateCardFlight(oppRect, { left: battleRect.left + 50, top: battleRect.top + 20 }, card, true, -5);
+
+            MATCH.table.push({ attack: card, defend: null });
+            renderTableState();
+            checkMatchWinner();
+        }
+
+        function botThrowInOrBito() {
+            if (!MATCH || MATCH.finished || MATCH.turn !== 'opp') return;
+            const ranks = getTableRanksSet();
+            sortPlayerCards(MATCH.oppHand, MATCH.trumpSuit);
+
+            const throwIdx = MATCH.oppHand.findIndex(c => ranks.has(c.value) && (c.suit !== MATCH.trumpSuit || MATCH.deck.length === 0));
+            if (throwIdx !== -1 && MATCH.table.length < 6 && MATCH.playerHand.length > 0) {
+                const card = MATCH.oppHand.splice(throwIdx, 1)[0];
+                const oppRect = document.getElementById('opp-hand-fan').getBoundingClientRect();
+                const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
+                animateCardFlight(oppRect, { left: battleRect.left + 85, top: battleRect.top + 20 }, card, true, 4);
+                MATCH.table.push({ attack: card, defend: null });
+                renderTableState();
+                checkMatchWinner();
+            } else {
+                const battleRect = document.getElementById('battle-grid').getBoundingClientRect();
+                const discardRect = document.getElementById('discard-anchor').getBoundingClientRect();
+                animateCardFlight(battleRect, discardRect, null, false, 20);
+                MATCH.table = [];
+                refillBothHands('opp');
+                MATCH.turn = 'player';
+                showToast('Бито! Ваш ход.');
+                renderTableState();
+                checkMatchWinner();
+            }
+        }
+
+        function refillBothHands(firstDrawer) {
+            const order = firstDrawer === 'player' ? ['playerHand', 'oppHand'] : ['oppHand', 'playerHand'];
+            for (const key of order) {
+                while (MATCH[key].length < 6 && MATCH.deck.length > 0) {
+                    MATCH[key].push(MATCH.deck.pop());
+                }
+            }
+        }
+
+        function checkMatchWinner() {
+            if (!MATCH || MATCH.finished) return false;
+            if (MATCH.deck.length > 0) return false;
+
+            const uncovered = MATCH.table.some(p => !p.defend);
+            if (uncovered) return false;
+
+            const pEmpty = MATCH.playerHand.length === 0;
+            const oEmpty = MATCH.oppHand.length === 0;
+
+            if (!pEmpty && !oEmpty) return false;
+
+            MATCH.finished = true;
+
+            if (pEmpty && oEmpty && MATCH.room.allowDraw) {
+                STATE.coins += MATCH.bet;
+                saveProfile();
+                showMatchResultModal('🤝', 'Боевая ничья!', 'Вы и соперник скинули карты одновременно.', `Возврат ставки: +${MATCH.bet.toLocaleString('ru-RU')} 🪙`);
+                return true;
+            }
+
+            if (pEmpty) {
+                const rake = Math.floor(MATCH.pot * (ADMIN_CONFIG.rakePercent / 100));
+                const prize = MATCH.pot - rake;
+                STATE.coins += prize;
+                STATE.totalWonCoins += (prize - MATCH.bet);
+                STATE.rp += 25;
+
+                unlockAchievement('first_win');
+                if (!MATCH.playerTookAny) unlockAchievement('clean_win');
+                if (MATCH.bet >= 5000) unlockAchievement('high_roller');
+                if (MATCH.lastPlayerAttackCard && MATCH.lastPlayerAttackCard.value === 6) {
+                    unlockAchievement('pogony');
+                }
+                saveProfile();
+                showMatchResultModal('🏆', 'Вы победили!', `Банк стола ваш (комиссия ${ADMIN_CONFIG.rakePercent}%)`, `+${prize.toLocaleString('ru-RU')} 🪙 • +25 RP`);
+                return true;
+            } else {
+                STATE.rp = Math.max(0, STATE.rp - 15);
+                saveProfile();
+                showMatchResultModal('🃏', 'Вы остались в дураках', 'Соперник вышел из игры первым', `-15 RP • Попробуйте отыграться!`);
+                return true;
+            }
+        }
+
+        function surrenderMatch() {
+            if (!MATCH) return;
+            MATCH.finished = true;
+            STATE.rp = Math.max(0, STATE.rp - 15);
+            saveProfile();
+            leaveTableToLobby();
+            showToast('Вы сдались (-15 RP)');
+        }
+
+        function showMatchResultModal(icon, title, subtitle, rewardLine) {
+            document.getElementById('res-icon').textContent = icon;
+            document.getElementById('res-title').textContent = title;
+            document.getElementById('res-subtitle').textContent = subtitle;
+            document.getElementById('res-rewards').textContent = rewardLine;
+            openModal('result');
+        }
+
+        function leaveTableToLobby() {
+            closeModal('result');
+            document.getElementById('screen-table').classList.add('hidden');
+            MATCH = null;
+        }
+
+        function rematchSameSettings() {
+            if (!MATCH) return;
+            const room = MATCH.room;
+            closeModal('result');
+            if (STATE.coins < room.bet) {
+                leaveTableToLobby();
+                openModal('shop');
+                return;
+            }
+            startNewGame(room);
+        }
+
+        function sendTableEmoji(emoji, fromOpp = false) {
+            const spot = document.getElementById(fromOpp ? 'opp-emoji-spot' : 'player-emoji-spot');
+            spot.textContent = emoji;
+            spot.classList.remove('hidden', 'emoji-pop');
+            void spot.offsetWidth;
+            spot.classList.add('emoji-pop');
+
+            if (!fromOpp && MATCH && !MATCH.finished) {
+                setTimeout(() => {
+                    const replies = ['😎', '😂', '🐻', '👍', '🔥'];
+                    sendTableEmoji(replies[Math.floor(Math.random() * replies.length)], true);
+                }, 850);
+            }
+        }
+
+        // ===================== 5. ИНВЕНТАРЬ, МАГАЗИН СКИНОВ, ДОСТИЖЕНИЯ, ЛИДЕРБОРД, АДМИНКА =====================
+        function openModal(name) {
+            if (name === 'inventory') renderInventoryModal();
+            if (name === 'achievements') renderAchievementsModal();
+            if (name === 'leaderboard') renderLeaderboardModal();
+            if (name === 'filters') renderFiltersModal();
+            if (name === 'shop') renderShopModal();
+            if (name === 'admin') renderAdminModal();
+            document.getElementById(`modal-${name}`).classList.remove('hidden');
+        }
+
+        function closeModal(name) {
+            document.getElementById(`modal-${name}`).classList.add('hidden');
+        }
+
+        function getSkinPreviewMarkup(item) {
+            if (item.category === 'back') {
+                return `<div class="w-10 h-14 rounded-lg ${item.css} shadow-md"></div>`;
+            }
+            if (item.category === 'face') {
+                return `<div class="w-10 h-14 rounded-lg ${item.css} shadow-md flex flex-col justify-between p-1 font-black text-xs"><span>A♠</span><span class="self-center text-base">♠</span></div>`;
+            }
+            return `<div class="w-12 h-10 rounded-xl ${item.css} border border-white/20 shadow-inner"></div>`;
+        }
+
+        function switchInventoryTab(tab) {
+            currentInventoryTab = tab;
+            document.getElementById('inv-tab-owned').className = tab === 'owned'
+                ? 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-emerald-500 text-slate-950'
+                : 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300';
+            document.getElementById('inv-tab-all').className = tab === 'all'
+                ? 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-emerald-500 text-slate-950'
+                : 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300';
+            renderInventoryModal();
+        }
+
+        function renderInventoryModal() {
+            const body = document.getElementById('inventory-modal-body');
+            const groups = [
+                { key: 'back', label: '🎴 Рубашки карт' },
+                { key: 'face', label: '🃏 Оформление лиц карт' },
+                { key: 'felt', label: '🟢 Сукно игрового стола' }
+            ];
+
+            body.innerHTML = groups.map(g => {
+                const items = SKINS_CATALOG.filter(s => s.category === g.key && (currentInventoryTab === 'all' || STATE.ownedSkins.includes(s.id)));
+                return `
+                    <div class="space-y-2">
+                        <div class="text-xs font-black text-slate-300">${g.label}</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            ${items.map(item => {
+                                const owned = STATE.ownedSkins.includes(item.id);
+                                const equipped = STATE.equipped[g.key] === item.id;
+                                let actionLabel = '';
+                                if (equipped) {
+                                    actionLabel = '<span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-[10px] font-black">✓ Надето</span>';
+                                } else if (owned) {
+                                    actionLabel = '<span class="px-2.5 py-1 rounded-lg bg-slate-700 text-white text-[10px] font-bold">Надеть</span>';
+                                } else if (item.priceStars > 0) {
+                                    actionLabel = `<span class="px-2.5 py-1 rounded-lg bg-sky-500 text-slate-950 text-[10px] font-black">Купить ${item.priceStars} ⭐️</span>`;
+                                } else {
+                                    actionLabel = `<span class="px-2.5 py-1 rounded-lg bg-amber-400 text-slate-950 text-[10px] font-black">Купить ${item.priceCoins} 🪙</span>`;
+                                }
+
+                                return `
+                                    <div onclick="handleSkinSelect('${item.id}')" class="cursor-pointer bg-slate-800/90 hover:bg-slate-800 border ${equipped ? 'border-emerald-500' : 'border-slate-700'} rounded-2xl p-2.5 flex items-center gap-2.5 transition active:scale-95">
+                                        ${getSkinPreviewMarkup(item)}
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-xs font-extrabold text-white truncate">${item.name}</div>
+                                            <div class="mt-1.5">${actionLabel}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function handleSkinSelect(skinId) {
+            const skin = SKINS_CATALOG.find(s => s.id === skinId);
+            if (!skin) return;
+
+            if (STATE.ownedSkins.includes(skin.id)) {
+                STATE.equipped[skin.category] = skin.id;
+                saveProfile();
+                renderInventoryModal();
+                if (!document.getElementById('modal-shop').classList.contains('hidden')) renderShopModal();
+                showToast(`Надето: ${skin.name}`);
+                return;
+            }
+
+            if (skin.priceStars > 0) {
+                if (STATE.stars < skin.priceStars) {
+                    showToast(`Не хватает Telegram Stars (${skin.priceStars} ⭐️)! Пополните баланс ниже.`);
+                    return;
+                }
+                STATE.stars -= skin.priceStars;
+            } else {
+                if (STATE.coins < skin.priceCoins) {
+                    showToast(`Не хватает монет (${skin.priceCoins} 🪙)!`);
+                    return;
+                }
+                STATE.coins -= skin.priceCoins;
+            }
+
+            STATE.ownedSkins.push(skin.id);
+            STATE.equipped[skin.category] = skin.id;
+            saveProfile();
+            renderInventoryModal();
+            if (!document.getElementById('modal-shop').classList.contains('hidden')) renderShopModal();
+            showToast(`🎉 Скин «${skin.name}» куплен и сразу надет!`);
+        }
+
+        function unlockAchievement(id) {
+            if (STATE.achievements[id]?.unlocked) return;
+            const ach = ACHIEVEMENTS_LIST.find(a => a.id === id);
+            if (!ach) return;
+            STATE.achievements[id] = { unlocked: true, claimed: false };
+            saveProfile();
+            showToast(`🏆 Открыто достижение «${ach.title}»!`);
+        }
+
+        function claimAchievementReward(id) {
+            const st = STATE.achievements[id];
+            const ach = ACHIEVEMENTS_LIST.find(a => a.id === id);
+            if (!st || !st.unlocked || st.claimed || !ach) return;
+            st.claimed = true;
+            STATE.coins += ach.reward;
+            saveProfile();
+            renderAchievementsModal();
+            showToast(`🎉 Награда +${ach.reward} 🪙 получена!`);
+        }
+
+        function renderAchievementsModal() {
+            const body = document.getElementById('achievements-modal-body');
+            body.innerHTML = ACHIEVEMENTS_LIST.map(a => {
+                const st = STATE.achievements[a.id] || { unlocked: false, claimed: false };
+                let btn = `<span class="text-[11px] font-bold text-amber-400">+${a.reward} 🪙</span>`;
+                if (st.unlocked && !st.claimed) {
+                    btn = `<button onclick="claimAchievementReward('${a.id}')" class="px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-black text-xs">Забрать +${a.reward} 🪙</button>`;
+                } else if (st.claimed) {
+                    btn = `<span class="text-[11px] font-bold text-emerald-400">✓ Получено</span>`;
+                }
+                return `
+                    <div class="bg-slate-800/85 border ${st.unlocked ? 'border-amber-500/40' : 'border-slate-700/80'} rounded-2xl p-3 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-xl">${a.icon}</div>
+                            <div>
+                                <div class="text-xs font-black text-white">${a.title}</div>
+                                <div class="text-[11px] text-slate-400">${a.desc}</div>
+                            </div>
+                        </div>
+                        <div class="shrink-0">${btn}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchLeaderboardTab(tab) {
+            currentLeaderboardTab = tab;
+            document.getElementById('lb-tab-rp').className = tab === 'rp'
+                ? 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-emerald-500 text-slate-950'
+                : 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300';
+            document.getElementById('lb-tab-coins').className = tab === 'coins'
+                ? 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-amber-400 text-slate-950'
+                : 'flex-1 py-2 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300';
+            renderLeaderboardModal();
+        }
+
+        function renderLeaderboardModal() {
+            const body = document.getElementById('leaderboard-modal-body');
+            const names = ['Козырной_Туз', 'Александр_МСК', 'КиберШулер', 'Дмитрий_ТГ', 'Император', 'Леди_Удача', 'Гроссмейстер', 'Ночной_Волк', 'Мастер_Карт', 'Виктор_Про'];
+            const list = [];
+
+            for (let i = 1; i <= 100; i++) {
+                const name = i <= names.length ? names[i - 1] : `Игрок_ТГ_${1000 + i}`;
+                const rp = Math.max(100, 4200 - i * 37);
+                const wonCoins = Math.max(1500, (101 - i) * 95000);
+                list.push({ rank: i, name, rp, wonCoins, isMe: false });
+            }
+            list.push({ rank: 0, name: 'Вы (Игрок #1)', rp: STATE.rp, wonCoins: STATE.totalWonCoins, isMe: true });
+
+            if (currentLeaderboardTab === 'rp') {
+                list.sort((a, b) => b.rp - a.rp);
+            } else {
+                list.sort((a, b) => b.wonCoins - a.wonCoins);
+            }
+
+            body.innerHTML = list.slice(0, 100).map((item, idx) => {
+                const pos = idx + 1;
+                const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : `#${pos}`;
+                const valText = currentLeaderboardTab === 'rp'
+                    ? `<span class="text-emerald-400 font-black">${item.rp.toLocaleString('ru-RU')} RP</span>`
+                    : `<span class="text-amber-400 font-black">${formatCompactNumber(item.wonCoins)} 🪙</span>`;
+                return `
+                    <div class="px-3 py-2 rounded-xl flex items-center justify-between text-xs border ${item.isMe ? 'bg-emerald-500/20 border-emerald-500/50' : 'bg-slate-800/75 border-slate-800'}">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-7 font-black text-slate-400">${medal}</span>
+                            <span class="font-bold ${item.isMe ? 'text-emerald-300' : 'text-white'}">${item.name}</span>
+                        </div>
+                        ${valText}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Магазин скинов и валюты
+        function filterShopSkins(cat) {
+            currentShopCategory = cat;
+            renderShopModal();
+        }
+
+        function renderShopModal() {
+            const body = document.getElementById('shop-modal-body');
+            const filteredSkins = SKINS_CATALOG.filter(s => currentShopCategory === 'all' || s.category === currentShopCategory);
+            const catBtn = (c, label) => `
+                <button onclick="filterShopSkins('${c}')" class="px-2.5 py-1.5 rounded-xl text-[11px] font-black transition ${currentShopCategory === c ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'}">${label}</button>
+            `;
+
+            body.innerHTML = `
+                <!-- 1. Ежедневное бесплатное пополнение -->
+                <div class="bg-slate-800/90 border border-amber-500/30 rounded-2xl p-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="text-xs font-black text-amber-300">🎁 Бесплатное пополнение каждый день</div>
+                        <span class="text-[10px] font-bold text-slate-400">Лимит: ${ADMIN_CONFIG.dailyRefillLimit} 🪙</span>
+                    </div>
+                    <p class="text-[11px] text-slate-300">Если на балансе меньше ${ADMIN_CONFIG.dailyRefillLimit.toLocaleString('ru-RU')} 🪙, вы можете бесплатно восстановить баланс.</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="STATE.coins = 200; saveProfile(); renderShopModal(); showToast('Тест: баланс снижен до 200 🪙');" class="py-2 rounded-xl bg-slate-900 border border-slate-700 text-[11px] font-bold text-slate-300">
+                            Тест: Сделать 200 🪙
+                        </button>
+                        <button onclick="claimDailyRefill(); renderShopModal();" class="py-2 rounded-xl bg-amber-400 text-slate-950 font-black text-[11px]">
+                            Долить до ${ADMIN_CONFIG.dailyRefillLimit} 🪙
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. ВИТРИНА СКИНОВ ПРЯМО В МАГАЗИНЕ -->
+                <div class="space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <div class="text-xs font-black text-white">🎨 Витрина скинов (Карты и Столы)</div>
+                        <span class="text-[10px] text-slate-400">${STATE.ownedSkins.length}/${SKINS_CATALOG.length} куплено</span>
+                    </div>
+                    <div class="flex gap-1.5 overflow-x-auto pb-1">
+                        ${catBtn('all', 'Все скины')}
+                        ${catBtn('back', 'Рубашки')}
+                        ${catBtn('face', 'Лица карт')}
+                        ${catBtn('felt', 'Сукно столов')}
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        ${filteredSkins.map(item => {
+                            const owned = STATE.ownedSkins.includes(item.id);
+                            const equipped = STATE.equipped[item.category] === item.id;
+                            let btnHtml = '';
+                            if (equipped) {
+                                btnHtml = `<span class="inline-block px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-[10px] font-black">✓ Надето</span>`;
+                            } else if (owned) {
+                                btnHtml = `<span class="inline-block px-2.5 py-1 rounded-lg bg-slate-700 text-white text-[10px] font-bold">Надеть</span>`;
+                            } else if (item.priceStars > 0) {
+                                btnHtml = `<span class="inline-block px-2.5 py-1 rounded-lg bg-sky-500 text-slate-950 text-[10px] font-black">Купить • ${item.priceStars} ⭐️</span>`;
+                            } else {
+                                btnHtml = `<span class="inline-block px-2.5 py-1 rounded-lg bg-amber-400 text-slate-950 text-[10px] font-black">Купить • ${item.priceCoins} 🪙</span>`;
+                            }
+                            return `
+                                <div onclick="handleSkinSelect('${item.id}')" class="cursor-pointer bg-slate-800/90 hover:bg-slate-800 border ${equipped ? 'border-emerald-500' : 'border-slate-700'} rounded-2xl p-2.5 flex items-center gap-2.5 transition active:scale-95">
+                                    ${getSkinPreviewMarkup(item)}
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-xs font-extrabold text-white truncate">${item.name}</div>
+                                        <div class="text-[10px] text-slate-400">${item.category === 'back' ? 'Рубашка' : item.category === 'face' ? 'Колода' : 'Стол'}</div>
+                                        <div class="mt-1">${btnHtml}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- 3. Пакеты игровых монет за Telegram Stars -->
+                <div class="space-y-2">
+                    <div class="text-xs font-black text-slate-300">🪙 Пополнить баланс монет за Звезды</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="buyCoinsForStars(10000, 25)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl p-3 text-left">
+                            <div class="text-sm font-black text-amber-400">+10 000 🪙</div>
+                            <div class="text-[11px] text-sky-300 font-bold mt-1">За 25 ⭐️</div>
+                        </button>
+                        <button onclick="buyCoinsForStars(50000, 100)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl p-3 text-left">
+                            <div class="text-sm font-black text-amber-400">+50 000 🪙</div>
+                            <div class="text-[11px] text-sky-300 font-bold mt-1">За 100 ⭐️</div>
+                        </button>
+                        <button onclick="buyCoinsForStars(250000, 350)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl p-3 text-left">
+                            <div class="text-sm font-black text-amber-400">+250 000 🪙</div>
+                            <div class="text-[11px] text-sky-300 font-bold mt-1">За 350 ⭐️</div>
+                        </button>
+                        <button onclick="buyCoinsForStars(1000000, 1000)" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl p-3 text-left">
+                            <div class="text-sm font-black text-amber-400">+1 000 000 🪙</div>
+                            <div class="text-[11px] text-sky-300 font-bold mt-1">За 1 000 ⭐️</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4. Пакеты Telegram Stars -->
+                <div class="space-y-2">
+                    <div class="text-xs font-black text-slate-300">⭐️ Пакеты Telegram Stars (Тестовый шлюз)</div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="addTelegramStars(50)" class="py-2.5 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-300 font-black text-xs">+50 ⭐️</button>
+                        <button onclick="addTelegramStars(250)" class="py-2.5 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-300 font-black text-xs">+250 ⭐️</button>
+                        <button onclick="addTelegramStars(1000)" class="py-2.5 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-300 font-black text-xs">+1 000 ⭐️</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function buyCoinsForStars(coins, starsCost) {
+            if (STATE.stars < starsCost) {
+                showToast(`Недостаточно Telegram Stars (${starsCost} ⭐️)! Нажмите на кнопку +⭐️ ниже.`);
+                return;
+            }
+            STATE.stars -= starsCost;
+            STATE.coins += coins;
+            saveProfile();
+            renderShopModal();
+            showToast(`✅ Начислено +${coins.toLocaleString('ru-RU')} 🪙!`);
+        }
+
+        function addTelegramStars(amount) {
+            STATE.stars += amount;
+            ADMIN_CONFIG.totalStarsDonated += amount;
+            saveProfile();
+            renderShopModal();
+            showToast(`⭐️ Оплата Telegram Stars успешна: +${amount} ⭐️!`);
+        }
+
+        // Промокоды
+        function redeemPromoCode() {
+            const input = document.getElementById('promo-code-input');
+            const code = input.value.trim().toUpperCase();
+            if (!code) return;
+
+            if (STATE.usedPromos.includes(code)) {
+                showToast('Вы уже активировали этот промокод!');
+                return;
+            }
+            const promo = PROMO_CODES.find(p => p.code === code);
+            if (!promo || promo.usesLeft <= 0) {
+                showToast('❌ Промокод не найден или закончился!');
+                return;
+            }
+
+            promo.usesLeft -= 1;
+            STATE.usedPromos.push(code);
+            STATE.coins += promo.coins;
+            STATE.stars += promo.stars;
+            saveProfile();
+            input.value = '';
+            closeModal('promo');
+            showToast(`🎉 Код ${code} активирован: +${promo.coins.toLocaleString('ru-RU')} 🪙 ${promo.stars > 0 ? `и +${promo.stars} ⭐️` : ''}!`);
+        }
+
+        // ===================== 6. ПОЛНОЦЕННАЯ АДМИН-ПАНЕЛЬ =====================
+        function switchAdminTab(tab) {
+            currentAdminTab = tab;
+            ['dash', 'skins', 'users', 'promos'].forEach(t => {
+                const el = document.getElementById(`adm-tab-${t}`);
+                el.className = t === tab
+                    ? 'py-1.5 rounded-xl text-[11px] font-black bg-rose-500 text-white'
+                    : 'py-1.5 rounded-xl text-[11px] font-black bg-slate-800 text-slate-300';
+            });
+            renderAdminModal();
+        }
+
+        function renderAdminModal() {
+            const body = document.getElementById('admin-modal-body');
+
+            if (currentAdminTab === 'dash') {
+                body.innerHTML = `
+                    <!-- Метрики -->
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-2.5 text-center">
+                            <div class="text-[10px] text-slate-400 font-bold">Игроков в БД</div>
+                            <div class="text-sm font-black text-white mt-0.5">${MOCK_USERS_DB.length}</div>
+                        </div>
+                        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-2.5 text-center">
+                            <div class="text-[10px] text-slate-400 font-bold">Активных столов</div>
+                            <div class="text-sm font-black text-emerald-400 mt-0.5">${ALL_SESSIONS.length}</div>
+                        </div>
+                        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-2.5 text-center">
+                            <div class="text-[10px] text-slate-400 font-bold">Донат Stars</div>
+                            <div class="text-sm font-black text-sky-400 mt-0.5">${ADMIN_CONFIG.totalStarsDonated} ⭐️</div>
+                        </div>
+                    </div>
+
                     <!-- Настройки экономики -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-3">
+                    <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-3 space-y-3">
                         <div class="text-xs font-black text-white">⚙️ Настройки экономики и Бота Telegram</div>
                         <div>
                             <label class="text-[10px] text-slate-400 font-bold block mb-1">Username вашего бота (без @, для инвайт-ссылок)</label>
@@ -54,7 +2527,148 @@
                     </div>
 
                     <!-- Инструменты быстрого тестирования -->
-<!-- ... existing code ... -->
+                    <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-3 space-y-2">
+                        <div class="text-xs font-black text-white">⚡ Быстрые действия для плей-теста</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="adminGiveSelfCurrency(50000, 0)" class="py-2 px-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-black text-[11px]">
+                                +50 000 🪙 себе
+                            </button>
+                            <button onclick="adminGiveSelfCurrency(0, 500)" class="py-2 px-2.5 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-300 font-black text-[11px]">
+                                +500 ⭐️ себе
+                            </button>
+                            <button onclick="adminUnlockAllSkins()" class="py-2 px-2.5 rounded-xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-black text-[11px]">
+                                🔓 Открыть все скины
+                            </button>
+                            <button onclick="adminGiveSelfRp(500)" class="py-2 px-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-black text-[11px]">
+                                +500 RP рейтинга
+                            </button>
+                        </div>
+                        <button onclick="adminResetProfile()" class="w-full py-2 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300 font-bold text-[11px] mt-1">
+                            🔄 Сбросить мой профиль к начальному
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            if (currentAdminTab === 'skins') {
+                body.innerHTML = `
+                    <!-- Добавление нового скина -->
+                    <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-3 space-y-2.5">
+                        <div class="text-xs font-black text-white">➕ Добавить новый скин в Магазин</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input id="adm-skin-name" type="text" placeholder="Название скина" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white">
+                            <select id="adm-skin-cat" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white font-bold">
+                                <option value="back">Рубашка карт</option>
+                                <option value="face">Лицо карт</option>
+                                <option value="felt">Сукно стола</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <select id="adm-skin-css" class="bg-slate-950 border border-slate-700 rounded-xl px-2 py-1.5 text-[11px] text-white">
+                                <option value="back-gold">Стиль: Золото</option>
+                                <option value="back-neon">Стиль: Неон</option>
+                                <option value="back-ruby">Стиль: Рубин</option>
+                                <option value="felt-cyber">Стол: Кибер</option>
+                                <option value="felt-crimson">Стол: Бордо</option>
+                                <option value="face-gold">Колода: Золото</option>
+                            </select>
+                            <input id="adm-skin-coins" type="number" placeholder="Цена 🪙" value="1500" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-amber-400 font-bold">
+                            <input id="adm-skin-stars" type="number" placeholder="Цена ⭐️" value="0" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-sky-400 font-bold">
+                        </div>
+                        <button onclick="adminCreateSkin()" class="w-full py-2 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">
+                            Добавить скин в каталог
+                        </button>
+                    </div>
+
+                    <!-- Список всех скинов -->
+                    <div class="space-y-1.5">
+                        <div class="text-xs font-black text-slate-300">Текущие скины (${SKINS_CATALOG.length})</div>
+                        ${SKINS_CATALOG.map(s => `
+                            <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex items-center justify-between text-xs">
+                                <div class="flex items-center gap-2">
+                                    ${getSkinPreviewMarkup(s)}
+                                    <div>
+                                        <div class="font-bold text-white">${s.name}</div>
+                                        <div class="text-[10px] text-slate-400">${s.priceStars > 0 ? `${s.priceStars} ⭐️` : `${s.priceCoins} 🪙`}</div>
+                                    </div>
+                                </div>
+                                <button onclick="handleSkinSelect('${s.id}'); renderAdminModal();" class="px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-[10px] font-bold text-white">
+                                    ${STATE.ownedSkins.includes(s.id) ? 'Надеть' : 'Тест-выдача'}
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                return;
+            }
+
+            if (currentAdminTab === 'users') {
+                body.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="text-xs font-black text-white">👥 Управление игроками и тестерами</div>
+                        ${MOCK_USERS_DB.map(u => `
+                            <div class="bg-slate-800 border ${u.banned ? 'border-rose-500/60 opacity-60' : 'border-slate-700'} rounded-2xl p-2.5 flex items-center justify-between gap-2">
+                                <div>
+                                    <div class="text-xs font-black text-white">${u.name} ${u.banned ? '<span class="text-rose-400">(БАН)</span>' : ''}</div>
+                                    <div class="text-[10px] text-slate-400">${u.rp} RP • <span class="text-amber-400 font-bold">${u.coins.toLocaleString('ru-RU')} 🪙</span></div>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <button onclick="adminBonusUser(${u.id}, 5000)" class="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-[10px] font-black">+5K 🪙</button>
+                                    ${!u.isSelf ? `<button onclick="adminToggleBanUser(${u.id})" class="px-2 py-1 rounded-lg ${u.banned ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'} text-[10px] font-black">${u.banned ? 'Разбан' : 'Бан'}</button>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="space-y-2 pt-2 border-t border-slate-800">
+                        <div class="text-xs font-black text-white">🃏 Активные комнаты (${ALL_SESSIONS.length})</div>
+                        ${ALL_SESSIONS.map(s => `
+                            <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex items-center justify-between text-xs">
+                                <div>
+                                    <div class="font-bold text-white">${s.title} (${formatCompactNumber(s.bet)} 🪙)</div>
+                                    <div class="text-[10px] text-slate-400">${s.host} • ${s.deckSize} карт</div>
+                                </div>
+                                <button onclick="adminDeleteSession(${s.id})" class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 text-[10px] font-bold">Удалить</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                return;
+            }
+
+            if (currentAdminTab === 'promos') {
+                body.innerHTML = `
+                    <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-3 space-y-2.5">
+                        <div class="text-xs font-black text-white">🎁 Создать промокод для друзей</div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <input id="adm-promo-code" type="text" placeholder="КОД (напр. VIP)" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black uppercase text-emerald-400">
+                            <input id="adm-promo-coins" type="number" placeholder="Монеты 🪙" value="5000" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-amber-400">
+                            <input id="adm-promo-stars" type="number" placeholder="Звезды ⭐️" value="50" class="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-sky-400">
+                        </div>
+                        <button onclick="adminCreatePromo()" class="w-full py-2 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">
+                            Создать промокод
+                        </button>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <div class="text-xs font-black text-slate-300">Активные промокоды</div>
+                        ${PROMO_CODES.map(p => `
+                            <div class="bg-slate-800 border border-slate-700 rounded-xl p-2.5 flex items-center justify-between text-xs">
+                                <div>
+                                    <span class="font-black text-emerald-400">${p.code}</span>
+                                    <div class="text-[10px] text-slate-400">+${p.coins.toLocaleString('ru-RU')} 🪙 • +${p.stars} ⭐️ (осталось: ${p.usesLeft})</div>
+                                </div>
+                                <button onclick="copyTextToClipboard('${p.code}'); showToast('Код ${p.code} скопирован!');" class="px-2.5 py-1 rounded-lg bg-slate-700 text-white text-[10px] font-bold">
+                                    Копировать
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+
         function saveAdminEconomyConfig() {
             const refillVal = parseInt(document.getElementById('adm-refill-input').value, 10);
             const rakeVal = parseInt(document.getElementById('adm-rake-input').value, 10);
@@ -70,28 +2684,93 @@
         }
 
         function adminGiveSelfCurrency(coins, stars) {
-<!-- ... existing code ... -->
-        function shareTelegramInvite() {
-            if (!activeWaitingRoom) return;
-            const botUser = ADMIN_CONFIG.botUsername || 'durak_online_bot';
-            const startParam = `room_${activeWaitingRoom.id}_${activeWaitingRoom.isPrivate ? activeWaitingRoom.password : 'open'}`;
-            const miniAppUrl = `https://t.me/${botUser}?startapp=${startParam}`;
-            const passText = activeWaitingRoom.isPrivate ? ` (PIN-пароль: ${activeWaitingRoom.password})` : '';
-            const inviteText = `🃏 Заходи ко мне за стол в «Дурак Онлайн»! Комната #${activeWaitingRoom.id}${passText}, ставка ${formatCompactNumber(activeWaitingRoom.bet)} 🪙, колода ${activeWaitingRoom.deckSize} карт!`;
-            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(miniAppUrl)}&text=${encodeURIComponent(inviteText)}`;
-
-            triggerHaptic('light');
-            copyTextToClipboard(`${inviteText}\n${miniAppUrl}`);
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-                window.Telegram.WebApp.openTelegramLink(shareUrl);
-            } else {
-                window.open(shareUrl, '_blank');
-            }
-            showToast('✈️ Выбор чата открыт в Telegram!');
+            STATE.coins += coins;
+            STATE.stars += stars;
+            saveProfile();
+            renderAdminModal();
+            showToast(`✅ Начислено: ${coins ? `+${coins.toLocaleString('ru-RU')} 🪙` : ''} ${stars ? `+${stars} ⭐️` : ''}`);
         }
 
-        function copyRoomInviteLink() {
-<!-- ... existing code ... -->
+        function adminGiveSelfRp(rpDelta) {
+            STATE.rp = Math.max(0, STATE.rp + rpDelta);
+            saveProfile();
+            renderAdminModal();
+            showToast(`✅ Рейтинг увеличен на +${rpDelta} RP!`);
+        }
+
+        function adminUnlockAllSkins() {
+            SKINS_CATALOG.forEach(s => {
+                if (!STATE.ownedSkins.includes(s.id)) STATE.ownedSkins.push(s.id);
+            });
+            saveProfile();
+            renderAdminModal();
+            showToast('🔓 Все скины разблокированы в вашем Инвентаре!');
+        }
+
+        function adminResetProfile() {
+            STATE = JSON.parse(JSON.stringify(DEFAULT_STATE));
+            saveProfile();
+            renderAdminModal();
+            showToast('🔄 Профиль сброшен к стандартным значениям');
+        }
+
+        function adminCreateSkin() {
+            const name = document.getElementById('adm-skin-name').value.trim();
+            const cat = document.getElementById('adm-skin-cat').value;
+            const css = document.getElementById('adm-skin-css').value;
+            const coins = parseInt(document.getElementById('adm-skin-coins').value, 10) || 0;
+            const stars = parseInt(document.getElementById('adm-skin-stars').value, 10) || 0;
+            if (!name) {
+                showToast('Введите название нового скина');
+                return;
+            }
+            const id = `${cat}-custom-${Date.now()}`;
+            SKINS_CATALOG.push({ id, category: cat, name, css, priceCoins: coins, priceStars: stars });
+            renderAdminModal();
+            showToast(`🎨 Скин «${name}» добавлен в Магазин и Инвентарь!`);
+        }
+
+        function adminBonusUser(userId, coins) {
+            const u = MOCK_USERS_DB.find(x => x.id === userId);
+            if (!u) return;
+            u.coins += coins;
+            if (u.isSelf) {
+                STATE.coins += coins;
+                saveProfile();
+            }
+            renderAdminModal();
+            showToast(`Игроку ${u.name} начислено +${coins.toLocaleString('ru-RU')} 🪙`);
+        }
+
+        function adminToggleBanUser(userId) {
+            const u = MOCK_USERS_DB.find(x => x.id === userId);
+            if (!u || u.isSelf) return;
+            u.banned = !u.banned;
+            renderAdminModal();
+            showToast(u.banned ? `🚫 ${u.name} заблокирован` : `✅ ${u.name} разблокирован`);
+        }
+
+        function adminDeleteSession(sessionId) {
+            ALL_SESSIONS = ALL_SESSIONS.filter(s => s.id !== sessionId);
+            renderAdminModal();
+            renderPublicSessions();
+            renderPrivateSessions();
+            showToast('Стол удален администратором');
+        }
+
+        function adminCreatePromo() {
+            const code = document.getElementById('adm-promo-code').value.trim().toUpperCase();
+            const coins = parseInt(document.getElementById('adm-promo-coins').value, 10) || 0;
+            const stars = parseInt(document.getElementById('adm-promo-stars').value, 10) || 0;
+            if (!code) {
+                showToast('Введите код промокода!');
+                return;
+            }
+            PROMO_CODES.unshift({ code, coins, stars, usesLeft: 100 });
+            renderAdminModal();
+            showToast(`🎁 Промокод ${code} создан!`);
+        }
+
         // Тактильная отдача Telegram (Haptic Feedback)
         function triggerHaptic(style = 'light') {
             try {
@@ -124,7 +2803,6 @@
                     tg.setBackgroundColor('#090d16');
                 }
 
-                // Подтягиваем реальное имя и аватарку пользователя из Telegram
                 const user = tg.initDataUnsafe?.user;
                 if (user) {
                     const displayName = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || `Игрок #${user.id}`;
@@ -145,7 +2823,6 @@
                     }
                 }
 
-                // Проверяем параметр приглашения в комнату (?startapp=room_1234_7744)
                 const startParam = tg.initDataUnsafe?.start_param;
                 if (startParam && startParam.startsWith('room_')) {
                     const parts = startParam.split('_');
