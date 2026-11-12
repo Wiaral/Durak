@@ -1,0 +1,189 @@
+<!-- ... existing code ... -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Дурак Онлайн — Telegram Mini App</title>
+    <!-- Официальный SDK Telegram Mini Apps -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+<!-- ... existing code ... -->
+        <!-- ================= ВЕРХНЯЯ ШАПКА: СЛЕВА АВАТАРКА + АДМИНКА, СПРАВА ВАЛЮТА ================= -->
+        <header class="px-3 py-2 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 flex items-center justify-between gap-1.5 z-30 shrink-0">
+            <!-- Слева: Аватарка, Ник, Ранг + Кнопка Админки -->
+            <div class="flex items-center gap-1.5 min-w-0">
+                <div onclick="openModal('achievements')" class="flex items-center gap-2 cursor-pointer bg-slate-800/75 hover:bg-slate-800 px-2 py-1 rounded-2xl border border-slate-700/70 transition min-w-0">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-base shadow-inner relative shrink-0">
+                        <span id="header-user-avatar">😎</span>
+                        <img id="header-user-photo" src="" alt="" class="hidden w-full h-full object-cover rounded-xl" onerror="this.classList.add('hidden')">
+                        <span id="header-rank-icon" class="absolute -bottom-1 -right-1 text-[10px] bg-slate-900 rounded-full px-0.5 border border-slate-700">🥉</span>
+                    </div>
+                    <div class="leading-tight min-w-0">
+                        <div id="header-user-name" class="text-[11px] font-black text-white truncate">Вы (Игрок #1)</div>
+                        <div class="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
+                            <span id="header-rank-name" class="truncate">Бронза</span>
+                            <span>•</span>
+                            <span class="text-emerald-400 font-bold shrink-0" id="header-rp">120 RP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопка Админ-панели -->
+<!-- ... existing code ... -->
+                    <!-- Настройки экономики -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-3">
+                        <div class="text-xs font-black text-white">⚙️ Настройки экономики и Бота Telegram</div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 font-bold block mb-1">Username вашего бота (без @, для инвайт-ссылок)</label>
+                            <input id="adm-bot-username" type="text" value="${ADMIN_CONFIG.botUsername || 'durak_online_bot'}" placeholder="durak_online_bot" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black text-sky-400">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="text-[10px] text-slate-400 font-bold block mb-1">Ежедневный долив (🪙)</label>
+                                <input id="adm-refill-input" type="number" value="${ADMIN_CONFIG.dailyRefillLimit}" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black text-amber-400">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 font-bold block mb-1">Комиссия со стола (%)</label>
+                                <input id="adm-rake-input" type="number" value="${ADMIN_CONFIG.rakePercent}" min="0" max="30" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black text-emerald-400">
+                            </div>
+                        </div>
+                        <button onclick="saveAdminEconomyConfig()" class="w-full py-2 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs">
+                            💾 Сохранить параметры
+                        </button>
+                    </div>
+
+                    <!-- Инструменты быстрого тестирования -->
+<!-- ... existing code ... -->
+        function saveAdminEconomyConfig() {
+            const refillVal = parseInt(document.getElementById('adm-refill-input').value, 10);
+            const rakeVal = parseInt(document.getElementById('adm-rake-input').value, 10);
+            const botUserEl = document.getElementById('adm-bot-username');
+            if (botUserEl && botUserEl.value.trim()) {
+                ADMIN_CONFIG.botUsername = botUserEl.value.trim().replace(/^@/, '');
+            }
+            if (!isNaN(refillVal) && refillVal >= 100) ADMIN_CONFIG.dailyRefillLimit = refillVal;
+            if (!isNaN(rakeVal) && rakeVal >= 0 && rakeVal <= 30) ADMIN_CONFIG.rakePercent = rakeVal;
+            saveProfile();
+            renderAdminModal();
+            showToast(`✅ Сохранено! Бот: @${ADMIN_CONFIG.botUsername}, долив до ${ADMIN_CONFIG.dailyRefillLimit} 🪙`);
+        }
+
+        function adminGiveSelfCurrency(coins, stars) {
+<!-- ... existing code ... -->
+        function shareTelegramInvite() {
+            if (!activeWaitingRoom) return;
+            const botUser = ADMIN_CONFIG.botUsername || 'durak_online_bot';
+            const startParam = `room_${activeWaitingRoom.id}_${activeWaitingRoom.isPrivate ? activeWaitingRoom.password : 'open'}`;
+            const miniAppUrl = `https://t.me/${botUser}?startapp=${startParam}`;
+            const passText = activeWaitingRoom.isPrivate ? ` (PIN-пароль: ${activeWaitingRoom.password})` : '';
+            const inviteText = `🃏 Заходи ко мне за стол в «Дурак Онлайн»! Комната #${activeWaitingRoom.id}${passText}, ставка ${formatCompactNumber(activeWaitingRoom.bet)} 🪙, колода ${activeWaitingRoom.deckSize} карт!`;
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(miniAppUrl)}&text=${encodeURIComponent(inviteText)}`;
+
+            triggerHaptic('light');
+            copyTextToClipboard(`${inviteText}\n${miniAppUrl}`);
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+                window.Telegram.WebApp.openTelegramLink(shareUrl);
+            } else {
+                window.open(shareUrl, '_blank');
+            }
+            showToast('✈️ Выбор чата открыт в Telegram!');
+        }
+
+        function copyRoomInviteLink() {
+<!-- ... existing code ... -->
+        // Тактильная отдача Telegram (Haptic Feedback)
+        function triggerHaptic(style = 'light') {
+            try {
+                const hf = window.Telegram?.WebApp?.HapticFeedback;
+                if (!hf) return;
+                if (style === 'success' || style === 'warning' || style === 'error') {
+                    hf.notificationOccurred(style);
+                } else {
+                    hf.impactOccurred(style);
+                }
+            } catch (e) {}
+        }
+
+        // Инициализация Telegram Mini App (профиль, полный экран, deep-link комнаты)
+        function initTelegramMiniApp() {
+            ADMIN_CONFIG.botUsername = ADMIN_CONFIG.botUsername || 'durak_online_bot';
+            try {
+                const tg = window.Telegram?.WebApp;
+                if (!tg) return;
+
+                tg.ready();
+                tg.expand();
+                if (typeof tg.disableVerticalSwipes === 'function') {
+                    tg.disableVerticalSwipes();
+                }
+                if (typeof tg.setHeaderColor === 'function') {
+                    tg.setHeaderColor('#0f172a');
+                }
+                if (typeof tg.setBackgroundColor === 'function') {
+                    tg.setBackgroundColor('#090d16');
+                }
+
+                // Подтягиваем реальное имя и аватарку пользователя из Telegram
+                const user = tg.initDataUnsafe?.user;
+                if (user) {
+                    const displayName = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || `Игрок #${user.id}`;
+                    const nameEl = document.getElementById('header-user-name');
+                    if (nameEl) nameEl.textContent = displayName;
+
+                    const selfInDb = MOCK_USERS_DB.find(u => u.isSelf);
+                    if (selfInDb) selfInDb.name = displayName;
+
+                    if (user.photo_url) {
+                        const imgEl = document.getElementById('header-user-photo');
+                        const emojiEl = document.getElementById('header-user-avatar');
+                        if (imgEl && emojiEl) {
+                            imgEl.src = user.photo_url;
+                            imgEl.classList.remove('hidden');
+                            emojiEl.classList.add('hidden');
+                        }
+                    }
+                }
+
+                // Проверяем параметр приглашения в комнату (?startapp=room_1234_7744)
+                const startParam = tg.initDataUnsafe?.start_param;
+                if (startParam && startParam.startsWith('room_')) {
+                    const parts = startParam.split('_');
+                    const roomId = parseInt(parts[1], 10);
+                    if (!isNaN(roomId)) {
+                        setTimeout(() => {
+                            showToast(`🔗 Переход по приглашению в комнату #${roomId}...`);
+                            const existing = ALL_SESSIONS.find(s => s.id === roomId);
+                            if (existing) {
+                                startNewGame(existing);
+                            } else {
+                                startNewGame({
+                                    id: roomId,
+                                    title: `Стол друга #${roomId}`,
+                                    host: 'Друг_из_Telegram',
+                                    avatar: '🦊',
+                                    rank: 'Золото',
+                                    bet: 250,
+                                    deckSize: 36,
+                                    mode: 'podkidnoy',
+                                    cheating: false,
+                                    allowDraw: false,
+                                    throwRule: 'neighbors'
+                                });
+                            }
+                        }, 400);
+                    }
+                }
+            } catch (e) {}
+        }
+
+        window.onload = function() {
+            initTelegramMiniApp();
+            updateHeaderAndHomeUI();
+            renderPublicSessions();
+            renderPrivateSessions();
+            renderCreateScreenControls();
+        };
+    </script>
+</body>
+</html>
